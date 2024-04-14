@@ -25,6 +25,7 @@ class Player:
         self.d_i = d_i
         # create array name store_interaction of length num_interactions
         self.store_interaction = [0] * num_interactions
+        self.endo_fit = [0] * num_interactions
 
 
 
@@ -101,7 +102,6 @@ def migration(pop):
         migrants = migrants[numb:]
     # raise error if the numbner of pop is not equal to 24 for each of the 40 value in pop2
     for i in range(0,40,1):
-        print(len(pop2[i]))
         if len(pop2[i]) != 24:
             raise ValueError("The number of pop is not equal to 24 for each of the 40 value in pop2")
 
@@ -116,22 +116,24 @@ def social_dilemna(pop, transfert_multiplier, number_of_interaction=1):
     for j in range(0, 40, 1):
         temp_pop = pop[j]
         for i in range(0, 24, 2):
+            # select the first player
+            rd = randint(0, 1)
+            p1 = i + rd
+            p2 = i + 1 - rd
             for k in range(0, number_of_interaction, 1):
-                # select the first player
-                rd = randint(0, 1)
-                p1 = i+rd
-                p2 = i+1-rd
                 if i == 0:
-                    temp_pop[p1].store_interaction[i] = temp_pop[p1].x_i
-                    temp_pop[p2].store_interaction[i] = temp_pop[p2].a_i + (temp_pop[p2].d_i - temp_pop[p2].a_i) * temp_pop[p1].x_i
+                    temp_pop[p1].store_interaction[k] = temp_pop[p1].x_i
+                    temp_pop[p2].store_interaction[k] = temp_pop[p2].a_i + (temp_pop[p2].d_i - temp_pop[p2].a_i) * temp_pop[p1].x_i
+
                 else:
-                    temp_pop[p1].store_interaction[i] = temp_pop[p1].a_i + (temp_pop[p1].d_i - temp_pop[p2].a_1) * temp_pop[p2].store_interaction[i-1]
-                    temp_pop[p2].store_interaction[i] = temp_pop[p2].a_i + (temp_pop[p2].d_i - temp_pop[p2].a_i) * temp_pop[p1].store_interaction[i]
-                endo_fit_1 = 1 - temp_pop[p1].store_interaction[i] + temp_pop[p2].store_interaction[i] * transfert_multiplier
-                endo_fit_2 = 1 - temp_pop[p2].store_interaction[i] + temp_pop[p1].store_interaction[i] * transfert_multiplier
-                temp_pop[p1].fitness = (1-truc)*number_of_interaction + truc * sum(endo_fit_1)
-                temp_pop[p2].fitness = (1-truc)*number_of_interaction + truc * sum(endo_fit_2)
-        pop[j] = temp_pop
+                    temp_pop[p1].store_interaction[k] = temp_pop[p1].a_i + (temp_pop[p1].d_i - temp_pop[p2].a_i) * temp_pop[p2].store_interaction[k-1]
+                    temp_pop[p2].store_interaction[k] = temp_pop[p2].a_i + (temp_pop[p2].d_i - temp_pop[p2].a_i) * temp_pop[p1].store_interaction[k]
+                temp_pop[p1].endo_fit[k] = 1 - temp_pop[p1].store_interaction[k] + temp_pop[p2].store_interaction[k] * transfert_multiplier
+                temp_pop[p2].endo_fit[k] = 1 - temp_pop[p2].store_interaction[k] + temp_pop[p1].store_interaction[k] * transfert_multiplier
+                #print(temp_pop[p1].endo_fit)
+            temp_pop[p1].fitness = (1-truc)*number_of_interaction + truc * sum(temp_pop[p1].endo_fit)
+            temp_pop[p2].fitness = (1-truc)*number_of_interaction + truc * sum(temp_pop[p2].endo_fit )
+    pop[j] = temp_pop
 
     return pop
 
@@ -161,6 +163,8 @@ def reproduction(pop):
                 pop[j][i] = Player(a_i = pop[j][i].a_i)
             else:
                 pop[j][i] = Player()
+
+    return pop
             
 
 
@@ -176,23 +180,29 @@ def main_loop(period, transfert_multiplier):
     # create the initial population
     pop = create_initial_pop()
     #meta pop
-    pop = meta_pop(pop)
+    #pop = meta_pop(pop)
+
     #migration
     pop = migration(pop)
+    print("migration pop:",pop)
     #social dilemna
     pop = social_dilemna(pop, transfert_multiplier)
+    print("dilemna pop:",pop)
     #reproduction
     pop = reproduction(pop)
-
+    print("repro pop:",pop)
     #main loop
-    for i in range(period):
-        # create the initial population
-        pop = create_initial_pop()
+    for i in range(1,period,1):
+        print("period",i)
         # shuffle the population
         shuffle(pop)
-        # calculate fitness
+        #pop = meta_pop(pop)
+        # migration
+        pop = migration(pop)
+        # social dilemna
         pop = social_dilemna(pop, transfert_multiplier)
-        # update age
+        # reproduction
+        pop = reproduction(pop)
 
     return pop
 
@@ -210,7 +220,7 @@ step_size = 0.025
 # weithing parameter for the fitness
 truc = 0.9
 
-#pop = main_loop(100, 2)
+pop = main_loop(3, 2)
 #print(pop)
 
 
