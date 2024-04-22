@@ -15,7 +15,7 @@ import pandas as pd
 class Player:
     ID = 0
 
-    def __init__(self, x_i=1, d_i=0.9, a_i=0.6, num_interactions=100):
+    def __init__(self, x_i=1, d_i=1, a_i=1, num_interactions=10):
 
         self.id = Player.ID
         Player.ID += 1
