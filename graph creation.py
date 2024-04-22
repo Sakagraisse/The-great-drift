@@ -74,44 +74,49 @@ def create_graph_pop_type():
             frame_d_shorten[i,counter:(counter+960)] = frame_d.iloc[:,j].values
             counter += 960
 
+
+
     #create a dataframe of 75 columns and 5 rows
-    frame_a_bins = pd.DataFrame(np.zeros((5, 75)))
+    frame_a_bins = pd.DataFrame(np.zeros((6, 75)))
     for i in range(0, 75, 1):
-        for j in range(0, len(frame_a_bins), 1):
-            if frame_a_shorten[i,j] == 1 and frame_d_shorten[i,j] == 1:
-                frame_a_bins.iloc[4, i] += 1
-            elif frame_a_shorten[i,j] > 0 and frame_d_shorten[i,j] == 1:
-                frame_a_bins.iloc[3, i] += 1
-            elif frame_a_shorten[i,j] == 1 and frame_d_shorten[i,j] == 1:
-                frame_a_bins.iloc[2, i] += 1
-            elif frame_a_shorten[i,j] == 0 and frame_d_shorten[i,j] < 1 and frame_d_shorten[i,j] > 0:
-                frame_a_bins.iloc[1, i] += 1
-            else:
+        for j in range(0, len(frame_a_shorten[i]), 1):
+            if frame_a_shorten[i,j] == 0 and frame_d_shorten[i,j] == 0:
                 frame_a_bins.iloc[0, i] += 1
+            elif frame_a_shorten[i,j] == 0 and frame_d_shorten[i,j] < 1 and frame_d_shorten[i,j] > 0 and frame_d_shorten[i,j] != 1 and frame_a_shorten[i,j] != 1:
+                frame_a_bins.iloc[1, i] += 1
+            elif frame_a_shorten[i,j] == 0 and frame_d_shorten[i,j] == 1:
+                frame_a_bins.iloc[2, i] += 1
+            elif frame_a_shorten[i,j] > 0 and frame_a_shorten[i,j] < 1 and frame_d_shorten[i,j] <1 and frame_d_shorten[i,j] > 0:
+                frame_a_bins.iloc[3, i] += 1
+            elif frame_a_shorten[i,j] > 0 and frame_d_shorten[i,j] == 1 and frame_a_shorten[i,j] < 1:
+                frame_a_bins.iloc[4, i] += 1
+            elif frame_a_shorten[i,j] == 1 and frame_d_shorten[i,j] == 1:
+                frame_a_bins.iloc[5, i] += 1
 
-
+    print(frame_a_bins)
     for i in range(0, 75, 1):
         sum_q =0
-        for j in range(0, 5, 1):
+        for j in range(0, 6, 1):
             sum_q += frame_a_bins.iloc[j, i]
-        for j in range(0, 5, 1):
+        for j in range(0, 6, 1):
             frame_a_bins.iloc[j, i] = frame_a_bins.iloc[j, i]/sum_q
     data = frame_a_bins.to_numpy()
     data_df = pd.DataFrame(data)
     data_df= data_df.transpose()
     print(data_df)
-    colors = ['red', 'lightgreen', 'green', 'orange', 'brown']
+    colors = ['red', 'lightgreen', 'green', 'blue', 'orange', 'brown']
     # Number of groups (i.e., number of stacked bars)
     data_df.plot(
         kind='bar',
         stacked=True,
         color=colors,
         title='Stacked Bar Graph',
-        mark_right=True)
+        mark_right=True,
+        figsize = (12, 8))
     plt.subplots_adjust(right=0.8)
     plt.xlabel("Generation")
     plt.ylabel("Proportion")
-    plt.legend(['selfish','de esca','perfect','esca','uncond'], loc="upper left", bbox_to_anchor=(1,1))
+    plt.legend(["Unconditionally selfish" ,"De−escalators","Perfect reciprocators","Ambiguous","Escalators","Unconditionally generous"], loc="upper left", bbox_to_anchor=(1,1))
 
     plt.show()
 

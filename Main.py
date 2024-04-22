@@ -15,7 +15,7 @@ import pandas as pd
 class Player:
     ID = 0
 
-    def __init__(self, x_i=1, d_i=1, a_i=1, num_interactions=10):
+    def __init__(self, x_i=1, d_i=1, a_i=0, num_interactions=10):
 
         self.id = Player.ID
         Player.ID += 1
@@ -76,7 +76,8 @@ def migration(pop):
     pop2 = []
     to_add = [0] * 40
     for j in range(0,40,1):
-        temp = randint(8,16)
+        #choose the number of migration
+        temp = 8
         temps_pop = pop[j]
         to_add[j] = temp
         # shuffle the population
