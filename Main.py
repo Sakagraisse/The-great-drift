@@ -3,9 +3,9 @@
 ################
 
 from collections import Counter
-from random import random, shuffle, randint
-
-
+from random import random as rand, shuffle, randint, choice
+import numpy as np
+import pandas as pd
 
 
 ################
@@ -37,14 +37,14 @@ def create_initial_pop():
     return pop
 
 
-def mutate(value):
+def mutate(value,mu, step_size):
     """
     Applies a mutation to the given value based on the mutation probability mu.
     """
     if value not in {0, 1}:
-        if random.random() < mu:
+        if rand() < mu:
             # Mutation: decide the step direction (up or down)
-            step_direction = random.choice([-step_size, step_size])
+            step_direction = choice([-step_size, step_size])
             # Apply the mutation while staying within the [0,1] boundaries
             new_value = min(1, max(0, value + step_direction))
         else:
@@ -52,9 +52,9 @@ def mutate(value):
             new_value = value
     else:
         # The value is at the boundary of the grid, it can only move in one direction
-        if value == 0 and random.random() < mu/2:
+        if value == 0 and rand() < mu/2:
             new_value = value + step_size
-        elif value == 1 and random.random() < mu/2:
+        elif value == 1 and rand() < mu/2:
             new_value = value - step_size
         else:
             # The value remains the same
@@ -108,7 +108,7 @@ def migration(pop):
     return pop2
 
 
-def social_dilemna(pop, transfert_multiplier, number_of_interaction=1):
+def social_dilemna(pop, transfert_multiplier, number_of_interaction=1,truc=0.9):
     """
     Social dilemna
     """
@@ -117,9 +117,9 @@ def social_dilemna(pop, transfert_multiplier, number_of_interaction=1):
         temp_pop = pop[j]
         for i in range(0, 24, 2):
             # select the first player
-            rd = randint(0, 1)
-            p1 = i + rd
-            p2 = i + 1 - rd
+            rd_value = randint(0, 1)
+            p1 = i + rd_value
+            p2 = i + 1 - rd_value
             for k in range(0, number_of_interaction, 1):
                 if i == 0:
                     temp_pop[p1].store_interaction[k] = temp_pop[p1].x_i
@@ -137,7 +137,7 @@ def social_dilemna(pop, transfert_multiplier, number_of_interaction=1):
 
     return pop
 
-def reproduction(pop):
+def reproduction(pop,mu, step_size):
     """
     Reproduction of the population
     """
@@ -147,22 +147,25 @@ def reproduction(pop):
             prob = pop[j][i].fitness / sum_fitness
 
             #for x_i
-            if randint(0,1) < prob:
-                pop[j][i] = Player(x_i = pop[j][i].x_i)
+            if rand() < prob:
+                x_i = mutate(pop[j][i].x_i, mu, step_size)
             else:
-                pop[j][i] = Player()
+                x_i = round(rand() * 20) / 20
+
 
             #for d_i
-            if randint(0,1) < prob:
-                pop[j][i] = Player(d_i = pop[j][i].d_i)
+            if rand() < prob:
+                d_i = mutate(pop[j][i].d_i, mu, step_size)
             else:
-                pop[j][i] = Player()
+                d_i = round(rand() * 20) / 20
 
             #for a_i
-            if randint(0,1) < prob:
-                pop[j][i] = Player(a_i = pop[j][i].a_i)
+            if rand() < prob:
+                a_i = mutate(pop[j][i].a_i, mu, step_size)
             else:
-                pop[j][i] = Player()
+                a_i = round(rand() * 20) / 20
+
+            pop[j][i] = Player(x_i=x_i, d_i=d_i, a_i=a_i)
 
     return pop
             
@@ -176,7 +179,7 @@ def reproduction(pop):
 ################
 
 # function that simulate the game
-def main_loop(period, transfert_multiplier):
+def main_loop(period, transfert_multiplier, frame_a, frame_x, frame_d, mu, step_size):
     # create the initial population
     pop = create_initial_pop()
     #meta pop
@@ -184,13 +187,14 @@ def main_loop(period, transfert_multiplier):
 
     #migration
     pop = migration(pop)
-    print("migration pop:",pop)
+
     #social dilemna
     pop = social_dilemna(pop, transfert_multiplier)
-    print("dilemna pop:",pop)
+
     #reproduction
-    pop = reproduction(pop)
-    print("repro pop:",pop)
+    pop = reproduction(pop, mu, step_size)
+
+    store_data(pop,frame_a,frame_x,frame_d,0)
     #main loop
     for i in range(1,period,1):
         print("period",i)
@@ -202,9 +206,28 @@ def main_loop(period, transfert_multiplier):
         # social dilemna
         pop = social_dilemna(pop, transfert_multiplier)
         # reproduction
-        pop = reproduction(pop)
+        pop = reproduction(pop, mu, step_size)
+        #store the data
+        store_data(pop,frame_a,frame_x,frame_d,i)
 
     return pop
+
+
+def store_data(pop,frame_a,frame_x,frame_d,period):
+    """
+    Store the data in a dataframe file
+    """
+    counter = 0
+    #iterate on ever pop number
+    for j in range(0,40,1):
+        #iterate on every player in the population
+        for i in range(0,24,1):
+            #store the data in the dataframe
+            frame_a.iloc[(counter-1), period] = pop[j][i].a_i
+            frame_x.iloc[(counter-1), period] = pop[j][i].x_i
+            frame_d.iloc[(counter-1), period] = pop[j][i].d_i
+            counter += 1
+            #print("counter =",counter,", period =",period)
 
 
 ################
@@ -212,15 +235,21 @@ def main_loop(period, transfert_multiplier):
 ################
 
 transfert_multiplier = 2
-period = 100
+period = 10
 dim = 2
 number_of_interaction = 100
 mu = 0.02
 step_size = 0.025
 # weithing parameter for the fitness
 truc = 0.9
+# create a dataframe of 960 rows and period columns
+frame_a = pd.DataFrame(np.zeros((960, period)))
+frame_x = pd.DataFrame(np.zeros((960, period)))
+frame_d = pd.DataFrame(np.zeros((960, period)))
 
-pop = main_loop(3, 2)
+pop = main_loop(period, transfert_multiplier, frame_a, frame_x, frame_d,mu, step_size)
+
+print(frame_a)
 #print(pop)
 
 

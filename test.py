@@ -1,11 +1,7 @@
-from Main import *
-
-pop = create_initial_pop()
-#print(pop[1][1].x_i)
-pop = migration(pop)
+import pandas as pd
+import numpy as np
+import random as rd
 
 
-pop = social_dilemna(pop, transfert_multiplier)
-
-pop = reproduction(pop)
-
+# take aletory a continuous number between 0 and 1
+print(rd.random())
