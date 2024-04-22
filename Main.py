@@ -109,7 +109,7 @@ def migration(pop):
     return pop2
 
 
-def social_dilemna(pop, transfert_multiplier, number_of_interaction=1,truc=0.9):
+def social_dilemna(pop, transfert_multiplier, number_of_interaction=10,truc=0.9):
     """
     Social dilemna
     """
