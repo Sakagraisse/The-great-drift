@@ -15,7 +15,7 @@ import pandas as pd
 class Player:
     ID = 0
 
-    def __init__(self, x_i=0.7, d_i=0.9, a_i=0.6, num_interactions=100):
+    def __init__(self, x_i=1, d_i=0.9, a_i=0.6, num_interactions=100):
 
         self.id = Player.ID
         Player.ID += 1
@@ -191,10 +191,11 @@ def main_loop(period, transfert_multiplier, frame_a, frame_x, frame_d, mu, step_
     #social dilemna
     pop = social_dilemna(pop, transfert_multiplier)
 
+    store_data(pop, frame_a, frame_x, frame_d, 0)
     #reproduction
     pop = reproduction(pop, mu, step_size)
 
-    store_data(pop,frame_a,frame_x,frame_d,0)
+
     #main loop
     for i in range(1,period,1):
         print("period",i)
@@ -205,10 +206,11 @@ def main_loop(period, transfert_multiplier, frame_a, frame_x, frame_d, mu, step_
         pop = migration(pop)
         # social dilemna
         pop = social_dilemna(pop, transfert_multiplier)
+        # store the data
+        store_data(pop, frame_a, frame_x, frame_d, i)
         # reproduction
         pop = reproduction(pop, mu, step_size)
-        #store the data
-        store_data(pop,frame_a,frame_x,frame_d,i)
+
 
     return pop
 
@@ -235,7 +237,7 @@ def store_data(pop,frame_a,frame_x,frame_d,period):
 ################
 
 transfert_multiplier = 2
-period = 10
+period = 1000
 dim = 2
 number_of_interaction = 100
 mu = 0.02
@@ -249,9 +251,13 @@ frame_d = pd.DataFrame(np.zeros((960, period)))
 
 pop = main_loop(period, transfert_multiplier, frame_a, frame_x, frame_d,mu, step_size)
 
-print(frame_a)
+print(frame_x)
 #print(pop)
 
+#store frame_a, frame_x, frame_d in a csv file unsing df.to_pickle('file_name.csv')
+frame_a.to_csv('frame_a.csv', index=False)
+frame_x.to_csv('frame_x.csv', index=False)
+frame_d.to_csv('frame_d.csv', index=False)
 
 
 
