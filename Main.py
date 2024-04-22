@@ -68,7 +68,7 @@ def meta_pop(pop):
     """
     pass
 
-def migration(pop):
+def migration(pop,to_migrate=8):
     """
     Migrate 8 to 16 member of each group to another group
     """
@@ -77,7 +77,7 @@ def migration(pop):
     to_add = [0] * 40
     for j in range(0,40,1):
         #choose the number of migration
-        temp = 8
+        temp = to_migrate
         temps_pop = pop[j]
         to_add[j] = temp
         # shuffle the population
@@ -109,7 +109,7 @@ def migration(pop):
     return pop2
 
 
-def social_dilemna(pop, transfert_multiplier, number_of_interaction=10,truc=0.9):
+def social_dilemna(pop, transfert_multiplier=2, number_of_interaction=10,truc=0.9):
     """
     Social dilemna
     """
@@ -131,7 +131,7 @@ def social_dilemna(pop, transfert_multiplier, number_of_interaction=10,truc=0.9)
                     temp_pop[p2].store_interaction[k] = temp_pop[p2].a_i + (temp_pop[p2].d_i - temp_pop[p2].a_i) * temp_pop[p1].store_interaction[k]
                 temp_pop[p1].endo_fit[k] = 1 - temp_pop[p1].store_interaction[k] + temp_pop[p2].store_interaction[k] * transfert_multiplier
                 temp_pop[p2].endo_fit[k] = 1 - temp_pop[p2].store_interaction[k] + temp_pop[p1].store_interaction[k] * transfert_multiplier
-                #print(temp_pop[p1].endo_fit)
+
             temp_pop[p1].fitness = (1-truc)*number_of_interaction + truc * sum(temp_pop[p1].endo_fit)
             temp_pop[p2].fitness = (1-truc)*number_of_interaction + truc * sum(temp_pop[p2].endo_fit )
     pop[j] = temp_pop
@@ -180,17 +180,17 @@ def reproduction(pop,mu, step_size):
 ################
 
 # function that simulate the game
-def main_loop(period, transfert_multiplier, frame_a, frame_x, frame_d, mu, step_size):
+def main_loop(period, transfert_multiplier, frame_a, frame_x, frame_d, mu, step_size,to_migrate,number_of_interaction,truc):
     # create the initial population
     pop = create_initial_pop()
     #meta pop
     #pop = meta_pop(pop)
 
     #migration
-    pop = migration(pop)
+    pop = migration(pop,to_migrate)
 
     #social dilemna
-    pop = social_dilemna(pop, transfert_multiplier)
+    pop = social_dilemna(pop, transfert_multiplier, number_of_interaction, truc)
 
     store_data(pop, frame_a, frame_x, frame_d, 0)
     #reproduction
@@ -199,14 +199,14 @@ def main_loop(period, transfert_multiplier, frame_a, frame_x, frame_d, mu, step_
 
     #main loop
     for i in range(1,period,1):
-        print("period",i)
+        print(i)
         # shuffle the population
         shuffle(pop)
         #pop = meta_pop(pop)
         # migration
-        pop = migration(pop)
+        pop = migration(pop,to_migrate)
         # social dilemna
-        pop = social_dilemna(pop, transfert_multiplier)
+        pop = social_dilemna(pop, transfert_multiplier, number_of_interaction, truc)
         # store the data
         store_data(pop, frame_a, frame_x, frame_d, i)
         # reproduction
@@ -230,7 +230,7 @@ def store_data(pop,frame_a,frame_x,frame_d,period):
             frame_x.iloc[(counter-1), period] = pop[j][i].x_i
             frame_d.iloc[(counter-1), period] = pop[j][i].d_i
             counter += 1
-            #print("counter =",counter,", period =",period)
+
 
 
 ################
@@ -239,21 +239,19 @@ def store_data(pop,frame_a,frame_x,frame_d,period):
 
 transfert_multiplier = 2
 period = 1000
-dim = 2
-number_of_interaction = 100
-mu = 0.02
+to_migrate = 0
+number_of_interaction = 10
+mu = 0.2
 step_size = 0.025
 # weithing parameter for the fitness
-truc = 0.9
+truc = 0.5
 # create a dataframe of 960 rows and period columns
 frame_a = pd.DataFrame(np.zeros((960, period)))
 frame_x = pd.DataFrame(np.zeros((960, period)))
 frame_d = pd.DataFrame(np.zeros((960, period)))
 
-pop = main_loop(period, transfert_multiplier, frame_a, frame_x, frame_d,mu, step_size)
+pop = main_loop(period, transfert_multiplier, frame_a, frame_x, frame_d,mu, step_size,to_migrate,number_of_interaction,truc)
 
-print(frame_x)
-#print(pop)
 
 #store frame_a, frame_x, frame_d in a csv file unsing df.to_pickle('file_name.csv')
 frame_a.to_csv('frame_a.csv', index=False)
