@@ -6,7 +6,7 @@ from collections import Counter
 from random import random as rand, shuffle, randint, choice
 import numpy as np
 import pandas as pd
-
+import time
 
 ################
 # Create base player
@@ -199,9 +199,9 @@ def main_loop(period, transfert_multiplier, frame_a, frame_x, frame_d, mu, step_
 
     #main loop
     for i in range(1,period,1):
-        print(i)
+        #print(i)
         # shuffle the population
-        shuffle(pop)
+        #shuffle(pop)
         #pop = meta_pop(pop)
         # migration
         pop = migration(pop,to_migrate)
@@ -250,13 +250,20 @@ frame_a = pd.DataFrame(np.zeros((960, period)))
 frame_x = pd.DataFrame(np.zeros((960, period)))
 frame_d = pd.DataFrame(np.zeros((960, period)))
 
+start = time.time()
 pop = main_loop(period, transfert_multiplier, frame_a, frame_x, frame_d,mu, step_size,to_migrate,number_of_interaction,truc)
 
+end = time.time()
+print("Time taken: ", end - start, "for", period, "iterations.")
 
+start = time.time()
 #store frame_a, frame_x, frame_d in a csv file unsing df.to_pickle('file_name.csv')
 frame_a.to_csv('frame_a.csv', index=False)
 frame_x.to_csv('frame_x.csv', index=False)
 frame_d.to_csv('frame_d.csv', index=False)
+
+end = time.time()
+print("Time taken to store the data: ", end - start, "for", period, "iterations.")
 
 
 

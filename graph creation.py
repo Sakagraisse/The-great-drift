@@ -90,6 +90,8 @@ def create_frame_x_graph_2():
     plt.ylabel('Bins')
     plt.title('Graph')
     plt.show()
+    #save the graph
+    plt.savefig('frame_x.png')
 
     return
 def create_graph_pop_type():
@@ -218,8 +220,11 @@ def create_graph_pop_type_2():
     plt.legend(["Unconditionally selfish" ,"De−escalators","Perfect reciprocators","Ambiguous","Escalators","Unconditionally generous"], loc="upper left", bbox_to_anchor=(1,1))
 
     plt.show()
+    #save the graph
+    plt.savefig('pop_type.png')
+
 
     return
 # Call the function
-#create_frame_x_graph_2()
+create_frame_x_graph_2()
 create_graph_pop_type_2()
