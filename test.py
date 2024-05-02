@@ -1,69 +1,42 @@
-import pandas as pd
+from random import random as rand, shuffle, randint, choice
 import numpy as np
-import random as rd
-
-
-# take aletory a continuous number between 0 and 1
-print(len(np.linspace(0, 2000, 75+1).astype(int)))
-
-print(np.linspace(0, 2000, 75+1).astype(int))
-
-# create data frame of 10 lines and 10 columns
-frame_x_bins = pd.DataFrame(np.zeros((10, 10)))
-
-bins = np.arange(0, 1.1, 0.1)
-for i in range(0, 10, 1):
-    hist, bin_edges = np.histogram(frame_x.iloc[:, i], bins)
-    frame_x_bins.iloc[:, i] = hist
-
-data = frame_x_bins.to_numpy()
-
-plt.figure(figsize=(10, 6))
-plt.imshow(data, cmap='Greys', aspect='auto')
-plt.colorbar(label='Value')
-plt.xticks(range(frame_x_bins.shape[1]), frame_x_bins.columns, rotation=0)
-plt.yticks(range(frame_x_bins.shape[0]), bins[:-1])
-plt.gca().invert_yaxis()  # Invert y-axis
-plt.xlabel('Period')
-plt.ylabel('Bins')
-plt.title('Graph')
-plt.show()
-
-# calculate the index of groups to have 75 groups of the same size
-index = np.linspace(0, frame_x.shape[1], 75 + 1).astype(int)
-# for i in range size of columns frame_x
-for i in range(0, 75, 1):
-    for j in range(index[i], index[i + 1], 1):
-        # append the values of the columns of frame_x to the columns of frame_x_shorten
-        frame_x_shorten.iloc[:, i] += frame_x.iloc[:, j]
-
-print(frame_x_shorten.shape)
+import pandas as pd
+import numba as nb
+import time
 
 
 
-def create_frame_x_graph():
-    # Import frame_x from csv file
-    frame_x = pd.read_csv("frame_x.csv")
+@nb.jit(nopython=True)
+def custom_random_choice(prob):
+    # Generate a random number
+    rand = np.random.random()
+    # Find the index where the cumulative sum exceeds the random number
+    for i, val in enumerate(np.cumsum(prob)):
+        if rand < val:
+            return i
+    return len(prob) - 1
 
-    # Create an empty list for frame_x_shorten
-    frame_x_shorten = []
+@nb.jit(nopython=True)
+def return_pop_vector_Ui(value,fitness):
+    cumulative = np.empty(24)
+    for i in range(24):
+        cumulative[i] = np.sum(fitness[0:i])
 
-    # Calculate the index of groups to have 75 groups of the same size
-    index = np.linspace(0, frame_x.shape[1], 75 + 1).astype(int)
+    sum = np.sum(fitness)
+    prob = fitness / sum
+    test = np.empty(24, dtype=np.int64)
+    for i in range(24):
+        test[i] = value[custom_random_choice(prob)]
+    return test
 
-    # For each group
-    for i in range(75):
-        # Get the block from frame_x
-        block = frame_x.iloc[:, index[i]:index[i + 1]].values.flatten().tolist()
+value = np.array([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23])
+fitness = np.array([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24])
 
-        # Extend frame_x_shorten with the block
-        frame_x_shorten += block
-
-    print(len(frame_x_shorten[0:]))  # Print the first 10 elements
-
-# Call the function
-create_frame_x_graph()
+print(return_pop_vector_Ui(value,fitness))
 
 
-# Call the function
-create_frame_x_graph()
+
+value = np.array([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23])
+fitness = np.array([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24])
+
+print(return_pop_vector_Ui(value,fitness))

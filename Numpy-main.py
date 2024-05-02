@@ -130,27 +130,12 @@ def reproduction(x_i, d_i, a_i, fitness, mu, step_size):
     Reproduction of the population
     """
     for j in range(40):
-        sum_fitness = np.sum(fitness[j])
-        for i in range(24):
-            prob = fitness[j, i] / sum_fitness
-
-            # for x_i
-            if np.random.random() < prob:
-                x_i[j, i] = mutate(x_i[j, i], mu, step_size)
-            else:
-                x_i[j, i] = np.round(np.random.random() * 20) / 20
-
-            # for d_i
-            if np.random.random() < prob:
-                d_i[j, i] = mutate(d_i[j, i], mu, step_size)
-            else:
-                d_i[j, i] = np.round(np.random.random() * 20) / 20
-
-            # for a_i
-            if np.random.random() < prob:
-                a_i[j, i] = mutate(a_i[j, i], mu, step_size)
-            else:
-                a_i[j, i] = np.round(np.random.random() * 20) / 20
+            #for x_i
+            x_i[j, :] = return_pop_vector_Ui(x_i[j, :], fitness[j, :])
+            #for d_i
+            d_i[j, :] = return_pop_vector_Ui(d_i[j, :], fitness[j, :])
+            #for a_i
+            a_i[j, :] = return_pop_vector_Ui(a_i[j, :], fitness[j, :])
 
     return x_i, d_i, a_i
 
@@ -180,9 +165,9 @@ def main_loop(period, transfert_multiplier, frame_a, frame_x, frame_d, mu, step_
         # store the data
         store_data(x_i, d_i, a_i, frame_a, frame_x, frame_d, i)
         # reproduction
-        x_i, d_i, a_i = reproduction(x_i, d_i, a_i, fitness, mu, step_size)
+        #x_i, d_i, a_i = reproduction(x_i, d_i, a_i, fitness, mu, step_size)
 
-    return x_i, d_i, a_i
+    return x_i, d_i, a_i, fitness
 
 @nb.jit(nopython=True)
 def store_data(x_i, d_i, a_i, frame_a, frame_x, frame_d, period):
@@ -200,8 +185,35 @@ def store_data(x_i, d_i, a_i, frame_a, frame_x, frame_d, period):
             frame_d[counter, period] = d_i[j, i]
             counter += 1
 
+@nb.jit(nopython=True)
+def custom_random_choice(prob):
+    # Generate a random number
+    rand = np.random.random()
+    # Find the index where the cumulative sum exceeds the random number
+    for i, val in enumerate(np.cumsum(prob)):
+        if rand < val:
+            return i
+    return len(prob) - 1
+
+@nb.jit(nopython=True)
+def return_pop_vector_Ui(value,fitness):
+    cumulative = np.empty(24)
+    for i in range(24):
+        cumulative[i] = np.sum(fitness[0:i])
+
+    sum = np.sum(fitness)
+    prob = fitness / sum
+    test = np.empty(24, dtype=np.int64)
+    for i in range(24):
+        test[i] = value[custom_random_choice(prob)]
+    return test
 
 
+
+# Définition des valeurs et des probabilités
+#values = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24])
+#probabilities = np.array([0.04] * 24)  # Exemple avec des probabilités uniformes
+#probabilities /= probabilities.sum()  # Assurez-vous que la somme est 1
 
 # base parameters
 
@@ -222,8 +234,10 @@ frame_d = np.zeros((960, period))
 
 #run the main loop
 start = time.time()
-x_i, d_i, a_i = main_loop(period, 2, frame_a, frame_x, frame_d, mu, step_size, to_migrate, number_of_interaction, truc, group_size, number_groups, num_interactions)
+x_i, d_i, a_i, fitness = main_loop(period, 2, frame_a, frame_x, frame_d, mu, step_size, to_migrate, number_of_interaction, truc, group_size, number_groups, num_interactions)
 end = time.time()
+
+print(fitness)
 print("Execution time: ", end - start,"for", period, "iterations.")
 
 

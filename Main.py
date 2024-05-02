@@ -238,7 +238,7 @@ def store_data(pop,frame_a,frame_x,frame_d,period):
 ################
 
 transfert_multiplier = 2
-period = 1000
+period = 500
 to_migrate = 0
 number_of_interaction = 10
 mu = 0.2
