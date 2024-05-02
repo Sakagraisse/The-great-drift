@@ -137,6 +137,14 @@ def reproduction(x_i, d_i, a_i, fitness, mu, step_size):
             #for a_i
             a_i[j, :] = return_pop_vector_Ui(a_i[j, :], fitness[j, :])
 
+    for j in range(40):
+        for i in range(24):
+            x_i[j, i] = mutate(x_i[j, i], mu, step_size)
+
+            d_i[j, i] = mutate(d_i[j, i], mu, step_size)
+
+            a_i[j, i] = mutate(a_i[j, i], mu, step_size)
+
     return x_i, d_i, a_i
 
 
@@ -210,10 +218,7 @@ def return_pop_vector_Ui(value,fitness):
 
 
 
-# Définition des valeurs et des probabilités
-#values = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24])
-#probabilities = np.array([0.04] * 24)  # Exemple avec des probabilités uniformes
-#probabilities /= probabilities.sum()  # Assurez-vous que la somme est 1
+
 
 # base parameters
 
