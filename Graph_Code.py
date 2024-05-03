@@ -100,5 +100,5 @@ def create_graph_pop_type_2():
 
     return
 # Call the function
-create_frame_x_graph_2()
-create_graph_pop_type_2()
+#create_frame_x_graph_2()
+#create_graph_pop_type_2()
