@@ -171,16 +171,11 @@ def store_data(x_i, d_i, a_i, frame_a, frame_x, frame_d, period):
     """
     Store the data in a numpy array
     """
-    counter = 0
-    # iterate on every pop number
-    for j in range(40):
-        # iterate on every player in the population
-        for i in range(24):
-            # store the data in the numpy arrays
-            frame_a[counter, period] = a_i[j, i]
-            frame_x[counter, period] = x_i[j, i]
-            frame_d[counter, period] = d_i[j, i]
-            counter += 1
+    frame_a[period, :] = a_i.flatten()
+    frame_x[period, :] = x_i.flatten()
+    frame_d[period, :] = d_i.flatten()
+
+    return frame_a, frame_x, frame_d
 
 @nb.jit(nopython=True)
 def custom_random_choice(prob):

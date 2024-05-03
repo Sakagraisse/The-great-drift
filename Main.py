@@ -11,14 +11,14 @@ num_interactions = 10
 number_of_interaction = num_interactions
 to_migrate = 8
 
-period = 1000
+period = 100
 mu = 0.2
 step_size = 0.025
 truc = 0.5
 
-frame_a = np.zeros((960, period))
-frame_x = np.zeros((960, period))
-frame_d = np.zeros((960, period))
+frame_a = np.empty((period, (group_size * number_groups)))
+frame_x = np.empty((period, (group_size * number_groups)))
+frame_d = np.empty((period, (group_size * number_groups)))
 
 #run the main loop
 start = time.time()
@@ -37,5 +37,6 @@ np.save('frame_d.npy', frame_d)
 end = time.time()
 print("Saving time: ", end - start)
 
+print(frame_a)
 GC.create_frame_x_graph_2()
-GC.create_graph_pop_type_2()
+#GC.create_graph_pop_type_2()
