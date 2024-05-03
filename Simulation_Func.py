@@ -112,8 +112,6 @@ def social_dilemma(x_i, d_i, a_i, store_interaction, endo_fit, fitness, number_g
             endo_fit[j, i, 0] = 1 - store_interaction[j, i, 0] + store_interaction[j, (i + 1), 0] * transfert_multiplier
             endo_fit[j, (i + 1), 0] = 1 - store_interaction[j, (i + 1), 0] + store_interaction[j, i, 0] * transfert_multiplier
 
-
-
             if num_interactions > 1:
                 for k in range(1,num_interactions):
                     store_interaction[j, i, k] = a_i[j, i] + (d_i[j, i] - a_i[j, i]) * store_interaction[j, (i+1), k-1]
@@ -155,15 +153,16 @@ def main_loop(period, transfert_multiplier, frame_a, frame_x, frame_d, mu, step_
 
     #main loop
     for i in range(0, period, 1):
-        print(i)
+        # store the data
+        store_data(x_i, d_i, a_i, frame_a, frame_x, frame_d, i)
+        #print(i)
         # migration
         x_i, d_i, a_i,fitness = migration(x_i, d_i, a_i, store_interaction, endo_fit, fitness, to_migrate, number_groups, group_size)
         # social dilemna
         x_i, d_i, a_i, store_interaction, endo_fit, fitness = social_dilemma(x_i, d_i, a_i, store_interaction, endo_fit, fitness, number_groups, group_size, num_interactions, transfert_multiplier, truc)
-        # store the data
-        store_data(x_i, d_i, a_i, frame_a, frame_x, frame_d, i)
         # reproduction
         x_i, d_i, a_i = reproduction(x_i, d_i, a_i, fitness, mu, step_size)
+        #print(fitness)
 
     return x_i, d_i, a_i, fitness
 
@@ -187,17 +186,19 @@ def store_data(x_i, d_i, a_i, frame_a, frame_x, frame_d, period):
 def custom_random_choice(prob):
     # Generate a random number
     rand = np.random.random()
+    cum_prob = np.cumsum(prob)
     # Find the index where the cumulative sum exceeds the random number
-    for i, val in enumerate(np.cumsum(prob)):
-        if rand < val:
+    for i in range(len(cum_prob)):
+        if rand < cum_prob[i]:
             return i
     return len(prob) - 1
 
 @nb.jit(nopython=True)
 def return_pop_vector_Ui(value,fitness):
+
     sum = np.sum(fitness)
     prob = fitness / sum
-    test_size = value.shape[0]  # Utilisez la taille de 'value' pour définir la taille de 'test'
+    test_size = value.shape[0]
     test = np.empty(test_size, dtype=np.float32)
     for i in range(test_size):
         test[i] = value[custom_random_choice(prob)]

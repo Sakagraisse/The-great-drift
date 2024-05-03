@@ -74,13 +74,13 @@ def create_graph_pop_type_2():
             elif frame_a_shorten[i,j] == 1 and frame_d_shorten[i,j] == 1:
                 frame_a_bins[5, i] += 1
 
-    print(frame_a_bins)
+
     for i in range(0, 75, 1):
         sum_q = np.sum(frame_a_bins[:, i])
         frame_a_bins[:, i] = frame_a_bins[:, i] / sum_q
     data = frame_a_bins
 
-    print(data)
+
     colors = ['red', 'lightgreen', 'green', 'blue', 'orange', 'brown']
     # Nombre de groupes (c'est-à-dire nombre de barres empilées)
     plt.figure(figsize=(12, 8))

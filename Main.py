@@ -7,12 +7,12 @@ import time
 
 group_size = 24
 number_groups = 40
-num_interactions = 1
+num_interactions = 10
 number_of_interaction = num_interactions
-to_migrate = 0
+to_migrate = 8
 
-period = 50000
-mu = 0.02
+period = 1000
+mu = 0.2
 step_size = 0.025
 truc = 0.5
 
@@ -25,11 +25,8 @@ start = time.time()
 x_i, d_i, a_i, fitness = SF.main_loop(period, 2, frame_a, frame_x, frame_d, mu, step_size, to_migrate, number_of_interaction, truc, group_size, number_groups, num_interactions)
 end = time.time()
 
-print(fitness)
+#print(fitness)
 print("Execution time: ", end - start,"for", period, "iterations.")
-
-GC.create_frame_x_graph_2()
-GC.create_graph_pop_type_2()
 
 start = time.time()
 
@@ -40,3 +37,5 @@ np.save('frame_d.npy', frame_d)
 end = time.time()
 print("Saving time: ", end - start)
 
+GC.create_frame_x_graph_2()
+GC.create_graph_pop_type_2()
