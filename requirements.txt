@@ -2,3 +2,4 @@ numpy
 matplotlib
 pandas
 numba == 0.59.1
+tqdm
