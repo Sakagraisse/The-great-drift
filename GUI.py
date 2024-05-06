@@ -2,14 +2,29 @@ import numpy as np
 import Simulation_Func as SF
 import Graph_Code as GC
 import time
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QSpinBox, QLabel, \
-    QDoubleSpinBox, QCheckBox, QRadioButton, QButtonGroup, QGroupBox,QGridLayout
+from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QSpinBox, QLabel, \
+    QDoubleSpinBox, QCheckBox, QRadioButton, QButtonGroup, QGroupBox,QGridLayout, QHBoxLayout, \
+    QSizePolicy, QTextEdit
+
+from PyQt6.QtGui import QPixmap, QColor
+from PyQt6.QtCore import Qt, QSize, QProcess
+
+
+class AspectRatioLabel(QLabel):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.aspect_ratio = 1.25 # Set the desired aspect ratio here
+
+    def resizeEvent(self, event):
+        w = self.width()
+        h = int(w / self.aspect_ratio)
+        self.setFixedSize(QSize(w, h))
 
 class ParameterChooser(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.layout = QVBoxLayout()
+
 
         # Create a QGroupBox
         self.base_parameters_group = QGroupBox("Base Parameters")
@@ -38,7 +53,7 @@ class ParameterChooser(QWidget):
 
         self.period_label = QLabel("Period")
         self.period_input = QSpinBox()
-        self.period_input.setRange(1, 200000)
+        self.period_input.setRange(100, 200000)
         self.period_input.setValue(150000)  # Set default value
         self.base_parameters_layout.addWidget(self.period_label, 1, 2)
         self.base_parameters_layout.addWidget(self.period_input, 1, 3)
@@ -85,6 +100,7 @@ class ParameterChooser(QWidget):
 
         self.lambda_param_label = QLabel("Lambda Param")
         self.lambda_param_input = QDoubleSpinBox()
+        self.lambda_param_input.setEnabled(False)
         self.lambda_param_input.setRange(0, 100)
         self.lambda_param_input.setSingleStep(1)
         self.lambda_param_input.setValue(10)  # Set default value
@@ -93,6 +109,7 @@ class ParameterChooser(QWidget):
 
         self.theta_label = QLabel("Theta")
         self.theta_input = QDoubleSpinBox()
+        self.theta_input.setEnabled(False)
         self.theta_input.setRange(0.01, 1.00)
         self.theta_input.setSingleStep(0.01)
         self.theta_input.setValue(0.5)  # Set default value
@@ -114,7 +131,7 @@ class ParameterChooser(QWidget):
         self.coupled_button_group.addButton(self.uncoupled_button)
 
         self.base_parameters_group.setLayout(self.base_parameters_layout)
-        self.layout.addWidget(self.base_parameters_group)
+
 
         # Create a QGroupBox for Simulation Type
         self.simulation_type_group = QGroupBox("Simulation Type")
@@ -137,22 +154,71 @@ class ParameterChooser(QWidget):
         self.simulation_type_layout.addWidget(self.option3_button)
 
         self.simulation_type_group.setLayout(self.simulation_type_layout)
-        self.layout.addWidget(self.simulation_type_group)
 
+
+        # Create a QHBoxLayout
+        self.main_layout = QHBoxLayout()
+
+        # Create a QVBoxLayout for the left column
+        self.left_column_layout = QVBoxLayout()
+
+        # Add the base parameters group and the simulation type group to the left column
+        self.left_column_layout.addWidget(self.base_parameters_group)
+        self.left_column_layout.addWidget(self.simulation_type_group)
+
+        # Add the submit button to the left column
         self.submit_button = QPushButton("Submit")
         self.submit_button.clicked.connect(self.submit)
-        self.layout.addWidget(self.submit_button)
+        self.left_column_layout.addWidget(self.submit_button)
 
-        self.submit_button = QPushButton("Graph 1")
-        self.submit_button.clicked.connect(self.graph1)
-        self.layout.addWidget(self.submit_button)
-
-        self.submit_button = QPushButton("Graph 2")
-        self.submit_button.clicked.connect(self.graph2)
-        self.layout.addWidget(self.submit_button)
+        # Add the left column layout to the main layout
+        self.main_layout.addLayout(self.left_column_layout)
 
 
-        self.setLayout(self.layout)
+
+        # Create a QVBoxLayout for the right column
+        self.right_column_layout = QVBoxLayout()
+
+        # Create a QHBoxLayout for the buttons
+        self.button_layout = QHBoxLayout()
+
+        # Create the "Graph 1" and "Graph 2" buttons
+        self.graph1_button = QPushButton("Graph 1")
+        self.graph1_button.clicked.connect(self.graph1)
+        self.button_layout.addWidget(self.graph1_button)
+
+        self.graph2_button = QPushButton("Graph 2")
+        self.graph2_button.clicked.connect(self.graph2)
+        self.button_layout.addWidget(self.graph2_button)
+
+        # Create a QGroupBox for the buttons
+        self.graph_type_group = QGroupBox("Type of Graph")
+        self.graph_type_group.setLayout(self.button_layout)
+
+        # Add the graph type group to the right column layout
+        self.right_column_layout.addWidget(self.graph_type_group)
+
+        pixmap = QPixmap(600, 400)  # Adjust the size to fit your needs
+        pixmap.fill(QColor(0, 0, 0, 0))  # Fill the QPixmap with a transparent color
+
+        # Create a QLabel for the graph
+        self.graph_label = QLabel()
+
+        self.graph_label.setPixmap(pixmap)
+
+
+        self.right_column_layout.addWidget(self.graph_label)
+
+
+        # Add the right column layout to the main layout
+        self.main_layout.addLayout(self.right_column_layout)
+
+        # Set the main layout of the window
+        self.setLayout(self.main_layout)
+
+
+
+        #self.setLayout(self.layout)
 
 
     def update_theta_lambda(self, checked):
@@ -180,6 +246,10 @@ class ParameterChooser(QWidget):
         mu = self.mu_input.value()
         step_size = self.step_size_input.value()
         truc = self.truc_input.value()
+        coupled = self.coupled_button.isChecked()
+        transfert_multiplier = self.transfert_multiplier_input.value()
+        lambda_param = self.lambda_param_input.value()
+        theta = self.theta_input.value()
 
         print(f"Group Size: {group_size}")
         print(f"Number of Groups: {number_groups}")
@@ -189,13 +259,51 @@ class ParameterChooser(QWidget):
         print(f"Mu: {mu}")
         print(f"Step Size: {step_size}")
         print(f"Truc: {truc}")
+        print(f"Coupled: {coupled}")
+        print(f"Transfert Multiplier: {transfert_multiplier}")
+        print(f"Lambda Param: {lambda_param}")
+        print(f"Theta: {theta}")
 
         frame_a = np.empty((period, (group_size * number_groups)))
-        frame_x = np.empty((period, (group_size * number_groups)))
+        frame_x = np.zeros((period, (group_size * number_groups)))
         frame_d = np.empty((period, (group_size * number_groups)))
+        frame_t = np.empty((period, (group_size * number_groups)))
+        frame_u = np.empty((period, (group_size * number_groups)))
+        frame_v = np.empty((period, (group_size * number_groups)))
+        frame_fitnessToT = np.empty((period, (group_size * number_groups)))
 
-        x_i, d_i, a_i, fitness = SF.main_loop(period, 2, frame_a, frame_x, frame_d, mu, step_size, to_migrate, truc,
-                                              group_size, number_groups, num_interactions)
+        if self.option1_button.isChecked():
+            start = time.time()
+            SF.main_loop_iterated(group_size, number_groups, num_interactions, period, frame_a, frame_x, frame_d, frame_t, \
+                               frame_u, frame_v, frame_fitnessToT, mu, step_size, \
+                               coupled, to_migrate, transfert_multiplier, truc)
+            end = time.time()
+            print("Execution time: ", end - start, "for", period, "iterations.")
+        elif self.option2_button.isChecked():
+            start = time.time()
+            SF.main_loop_group_competition(group_size, number_groups, num_interactions, period, frame_a, frame_x,
+                                           frame_d, frame_t, \
+                                           frame_u, frame_v, frame_fitnessToT, mu, step_size, coupled, to_migrate,
+                                           transfert_multiplier, truc, lambda_param, theta)
+            end = time.time()
+            print("Execution time: ", end - start, "for", period, "iterations.")
+        else:
+            start = time.time()
+            SF.main_loop_group_competition(group_size, number_groups, num_interactions, period, frame_a, frame_x,
+                                           frame_d, frame_t, \
+                                           frame_u, frame_v, frame_fitnessToT, mu, step_size, coupled, to_migrate,
+                                           transfert_multiplier, truc, lambda_param, theta)
+            end = time.time()
+            print("Execution time: ", end - start, "for", period, "iterations.")
+
+        index = np.linspace(0, frame_x.shape[0] - 1, 75).astype(int)
+        frame_x = frame_x[index, :]
+        frame_a = frame_a[index, :]
+        frame_d = frame_d[index, :]
+        frame_t = frame_t[index, :]
+        frame_u = frame_u[index, :]
+        frame_v = frame_v[index, :]
+        frame_fitnessToT = frame_fitnessToT[index, :]
 
         np.save('frame_a.npy', frame_a)
         np.save('frame_x.npy', frame_x)
@@ -204,18 +312,28 @@ class ParameterChooser(QWidget):
         print("finished")
 
     def graph1(self):
+        # Generate the graph and save it as an image
         GC.create_frame_x_graph_2()
+        # Load the image into the QLabel
+        pixmap = QPixmap("frame_x.png")
+        self.graph_label.setPixmap(pixmap)
+        self.graph_label.resize(pixmap.width(), pixmap.height())
         print("finished")
 
     def graph2(self):
+        # Generate the graph and save it as an image
         GC.create_graph_pop_type_2()
+        # Load the image into the QLabel
+        pixmap = QPixmap("pop_type.png")
+        self.graph_label.setPixmap(pixmap)
+        self.graph_label.resize(pixmap.width(), pixmap.height())
         print("finished")
 
 
 app = QApplication([])
 window = ParameterChooser()
 window.show()
-app.exec_()
+app.exec()
 
 
 

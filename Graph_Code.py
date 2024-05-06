@@ -23,7 +23,7 @@ def create_frame_x_graph_2():
     data = frame_x_bins
     #transposing the data
     data = data.T
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(12, 8))
     plt.imshow(data, cmap='Greys', aspect='auto')
     plt.colorbar(label='Value')
     plt.xticks(range(data.shape[1]), rotation=90)
@@ -32,9 +32,9 @@ def create_frame_x_graph_2():
     plt.xlabel('Period')
     plt.ylabel('Bins')
     plt.title('Graph')
-    plt.show()
+    #plt.show()
     #save the graph
-    plt.savefig('frame_x.png')
+    plt.savefig('frame_x.png',dpi=75)
 
     return
 
@@ -101,8 +101,8 @@ def create_graph_pop_type_2():
                 "Unconditionally generous", "Other"], loc="upper left",
                bbox_to_anchor=(1, 1))
 
-    plt.show()
+    #plt.show()
     # Sauvegarder le graphique
-    plt.savefig('pop_type.png')
+    plt.savefig('pop_type.png',dpi=75)
 
     return
