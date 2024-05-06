@@ -1,9 +1,8 @@
-from random import random as rand, shuffle, randint, choice
+
 import numpy as np
-import pandas as pd
+
 import numba as nb
-import time
-from tqdm import tqdm
+
 
 ################
 # Create base player
@@ -24,7 +23,7 @@ def create_initial_pop(group_size, number_groups, num_interactions):
     d_i = np.ones((number_groups, group_size), dtype=np.float64)
     a_i = np.zeros((number_groups, group_size), dtype=np.float64)
     t_i = np.ones((number_groups, group_size), dtype=np.float64)
-    u_i = np.ones((number_groups, group_size), dtype=np.float64)
+    u_i = np.zeros((number_groups, group_size), dtype=np.float64)
     v_j = np.ones((number_groups, group_size), dtype=np.float64)
 
     store_interaction = np.empty((number_groups, group_size,num_interactions), dtype=np.float64)
@@ -189,7 +188,6 @@ def OUT_social_dilemma(t_i,u_i,v_j,fitnessOUT,group_size, number_groups,transfer
     """
     Create the out-group competition
     """
-    fitnessOUT = np.empty((number_groups, group_size), dtype=np.float64)
     for j in range(0,number_groups,2):
         indices_in_group = np.arange(group_size)
         np.random.shuffle(indices_in_group)
@@ -198,20 +196,20 @@ def OUT_social_dilemma(t_i,u_i,v_j,fitnessOUT,group_size, number_groups,transfer
         for i in range(0,group_size):
             p = indices_in_group[i]
             temp_x = t_i[g1,p]
-            temp_y = u_i[g2,p] + (v_j[j,p] - u_i[j,p]) * temp_x
+            temp_y = u_i[g2,p] + (v_j[g2,p] - u_i[g2,p]) * temp_x
             fitnessOUT[g1,p] = 1 - temp_x + temp_y * transfert_multiplier
             fitnessOUT[g1,p] = 1 - temp_y + temp_x * transfert_multiplier
 
-    return fitnessOUT
+    return
 
 @nb.jit(nopython=True)
-def fitnessToT_calculation(fitnessIN, fitnessOUT, fitnessToT, number_groups, group_size,truc,num_interactions):
+def fitnessToT_calculation(fitnessIN, fitnessOUT, fitnessToT, number_groups, group_size,truc,num_interactions,compi = 0):
     """
     Calculate the total fitness
     """
     for j in range(number_groups):
         for i in range(group_size):
-            fitnessToT[j,i] = (1-truc)*num_interactions + truc *(fitnessIN[j,i] + truc*fitnessOUT[j,i])
+            fitnessToT[j,i] = (1-truc)*(num_interactions + compi) + truc *(fitnessIN[j,i] + truc*fitnessOUT[j,i])
     return
 
 @nb.jit(nopython=True)
@@ -224,11 +222,11 @@ def intergroup_comp(fitnessToT, number_groups, group_size, truc, transfert_multi
         G2 = indices_group[i+1]
         fitnessTot_G1 = np.sum(fitnessToT[G1])
         fitnessTot_G2 = np.sum(fitnessToT[G2])
-        proba_competition =( np.abs(fitnessTot_G1 - fitnessTot_G2) / delta)/(theta + np.abs(fitnessTot_G1 - fitnessTot_G2) / delta)
+        proba_competition = (np.abs(fitnessTot_G2 - fitnessTot_G1) / delta)/(theta + np.abs(fitnessTot_G2 - fitnessTot_G1) / delta)
         if np.random.random() < proba_competition:
             do_compete[G1] = True
             do_compete[G2] = True
-            proba_victory = 1 / (1 + np.exp((lambda_param / delta) * (fitnessTot_G1 - fitnessTot_G2)))
+            proba_victory = 1 / (1 + np.exp((lambda_param / delta) * (fitnessTot_G2 - fitnessTot_G1)))
             if np.random.random() < proba_victory:
                 victory[G1] = True
                 victory[G2] = False
@@ -278,36 +276,28 @@ def replace_group_comp(x_i, d_i, a_i, t_i, u_i, v_i, fitnessToT, indices_group, 
         G1 = indices_group[j]
         G2 = indices_group[j+1]
         if do_compete[G1] and do_compete[G2]:
-            print("Both groups compete")
             if victory[G1]:
                 won = G1
                 lost = G2
-            else:
+            elif victory[G2]:
                 won = G2
                 lost = G1
-            x_i[lost], d_i[lost], a_i[lost] = reproduction_one_group(x_i[won], d_i[won], a_i[won], fitnessToT[won], mu, step_size)
+            else:
+                raise ValueError("compete but no winner")
+            x_i[lost,:], d_i[lost,:], a_i[lost,:] = reproduction_one_group(x_i[won,:], d_i[won,:], a_i[won,:], fitnessToT[won,:], mu, step_size)
             #same with the rest of parameters
-            t_i[lost], u_i[lost], v_i[lost] = reproduction_one_group(t_i[won], u_i[won], v_i[won], fitnessToT[won], mu, step_size)
+            t_i[lost,:], u_i[lost,:], v_i[lost,:] = reproduction_one_group(t_i[won,:], u_i[won,:], v_i[won,:], fitnessToT[won,:], mu, step_size)
         elif not do_compete[G1] and not do_compete[G2]:
             x_i[G1,:], d_i[G1,:], a_i[G1,:] = reproduction_one_group(x_i[G1,:], d_i[G1,:], a_i[G1,:], fitnessToT[G1,:], mu, step_size)
             t_i[G1,:], u_i[G1,:], v_i[G1,:] = reproduction_one_group(t_i[G1,:], u_i[G1,:], v_i[G1,:], fitnessToT[G1,:], mu, step_size)
             x_i[G2,:], d_i[G2,:], a_i[G2,:] = reproduction_one_group(x_i[G2,:], d_i[G2,:], a_i[G2,:], fitnessToT[G2,:], mu, step_size)
             t_i[G2,:], u_i[G2,:], v_i[G2,:] = reproduction_one_group(t_i[G2,:], u_i[G2,:], v_i[G2,:], fitnessToT[G2,:], mu, step_size)
 
-
-
+        else :
+            # raise an error in due form
+            raise ValueError("The groups are not in the same state")
     return
 
-
-@nb.jit(nopython=True)
-def reproduction(x_i, d_i, a_i, fitness, mu, step_size):
-    """
-    Reproduction of the population
-    """
-    for j in range(x_i.shape[0]):
-        x_i[j], d_i[j], a_i[j] = reproduction_one_group(x_i[j], d_i[j], a_i[j], fitness[j], mu, step_size)
-
-    return x_i, d_i, a_i
 
 @nb.jit(nopython=True)
 def reproduction_one_group(v1,v2,v3, fitness, mu, step_size):
@@ -368,14 +358,14 @@ def main_loop_group_competition(group_size, number_groups, num_interactions, per
     x_i, d_i, a_i, t_i, u_i, v_i, store_interaction, endo_fit, fitnessIN, fitnessOUT, fitnessToT \
         = create_initial_pop(group_size, number_groups, num_interactions)
 
-    victory = np.zeros(number_groups, dtype=bool)
-    do_compete = np.zeros(number_groups, dtype=bool)
+    victory = np.zeros(number_groups, dtype=np.bool_)
+    do_compete = np.zeros(number_groups, dtype=np.bool_)
 
     for i in range(0, period, 1):
         print("Progress:", round((i / period) * 100), "%")
         # store the data
         store_data(x_i, d_i, a_i, t_i, u_i, v_i, fitnessToT, frame_a, frame_x, frame_d, frame_t, frame_u, frame_v, \
-                   frame_fitnessToT, period)
+                   frame_fitnessToT, i)
 
         indices = meta_pop(number_groups)
         move_groups(x_i, d_i, a_i, t_i, u_i, v_i, indices)
@@ -394,7 +384,7 @@ def main_loop_group_competition(group_size, number_groups, num_interactions, per
         if not coupled:
             migration(x_i, d_i, a_i, t_i, u_i, v_i, to_migrate, number_groups, group_size)
 
-        fitnessToT_calculation(fitnessIN, fitnessOUT, fitnessToT, number_groups, group_size, truc, num_interactions)
+        fitnessToT_calculation(fitnessIN, fitnessOUT, fitnessToT, number_groups, group_size, truc, num_interactions,1)
 
         intergroup_comp(fitnessToT, number_groups, group_size, truc, transfert_multiplier, num_interactions, theta,
                         victory, indices_group, lambda_param, do_compete)
@@ -423,8 +413,8 @@ def main_loop_iterated(group_size, number_groups, num_interactions, period, fram
 
 
         #Movement in metapopulation
-        indices = meta_pop(number_groups)
-        move_groups(x_i, d_i, a_i, t_i, u_i, v_i, indices)
+        #indices = meta_pop(number_groups)
+        #move_groups(x_i, d_i, a_i, t_i, u_i, v_i, indices)
 
         #Migration(Coupled)
         if coupled:

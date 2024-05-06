@@ -2,15 +2,27 @@ import numpy as np
 import Simulation_Func as SF
 import Graph_Code as GC
 import time
+from numba.core.registry import CPUDispatcher
 
-# base parameters
+def flush(func):
+    def flush_numba_cache(func):
+        dispatcher = CPUDispatcher(func)
+        for sig in list(dispatcher.overloads.keys()):
+            del dispatcher.overloads[sig]
+        dispatcher.recompile()
+
+    for your_numba_function in [SF.main_loop_group_competition]:
+        flush_numba_cache(your_numba_function)
+
+flush(SF.main_loop_group_competition)
+
 
 group_size = 24
 number_groups = 40
-num_interactions = 10
+num_interactions = 1
 to_migrate = 8
 
-period = 10000
+period = 35000
 mu = 0.02
 step_size = 0.025
 truc = 0.5
@@ -25,12 +37,14 @@ frame_fitnessToT = np.empty((period, (group_size * number_groups)))
 
 coupled = True
 transfert_multiplier = 2
+lambda_param = 10
+theta = 0.5
 
 #run the main loop
 start = time.time()
-SF.main_loop_iterated(group_size, number_groups, num_interactions, period, frame_a, frame_x, frame_d, frame_t, \
-                                frame_u, frame_v, frame_fitnessToT, mu, step_size, \
-                                coupled, to_migrate, transfert_multiplier, truc)
+SF.main_loop_group_competition(group_size, number_groups, 1, period, frame_a, frame_x, frame_d, frame_t,\
+                                frame_u, frame_v, frame_fitnessToT, mu, step_size,\
+                                coupled, to_migrate, transfert_multiplier, truc, lambda_param, theta)
 
 
 
