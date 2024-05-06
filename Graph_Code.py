@@ -1,13 +1,18 @@
-import pandas as pd
+import sys
+import os
+
+
 import numpy as np
-import random as rd
+
 import matplotlib.pyplot as plt
 import numba as nb
+
 
 #@nb.jit(nopython=True)
 def create_frame_x_graph_2():
     # Import frame_x from csv file
-    frame_x = np.load('frame_x.npy')
+    dir_path = os.path.dirname(os.path.abspath(__file__))
+    frame_x = np.load(os.path.join(dir_path, 'frame_x.npy'))
 
     # Division of columns into 75 groups
     index = np.linspace(0, frame_x.shape[0]-1, 75).astype(int)
@@ -34,7 +39,8 @@ def create_frame_x_graph_2():
     plt.title('Graph')
     #plt.show()
     #save the graph
-    plt.savefig('frame_x.png',dpi=75)
+    dir_path = os.path.dirname(os.path.abspath(__file__))
+    plt.savefig(os.path.join(dir_path, 'frame_x.png'),dpi=75)
 
     return
 
@@ -44,8 +50,9 @@ def function_1(a,d,x):
     return y
 def create_graph_pop_type_2():
     # Importer frame_a et frame_d à partir de fichiers csv
-    frame_a = np.load('frame_a.npy')
-    frame_d = np.load('frame_d.npy')
+    dir_path = os.path.dirname(os.path.abspath(__file__))
+    frame_a = np.load(os.path.join(dir_path, 'frame_a.npy'))
+    frame_d = np.load(os.path.join(dir_path, 'frame_d.npy'))
 
     # Créer des groupes de 75 colonnes comme dans create_frame_x_graph
     index = np.linspace(0, frame_a.shape[0]-1, 75).astype(int)
@@ -103,6 +110,7 @@ def create_graph_pop_type_2():
 
     #plt.show()
     # Sauvegarder le graphique
-    plt.savefig('pop_type.png',dpi=75)
+    dir_path = os.path.dirname(os.path.abspath(__file__))
+    plt.savefig(os.path.join(dir_path, 'frame_a.png'), dpi=75)
 
     return

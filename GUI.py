@@ -1,3 +1,5 @@
+import sys
+import os
 import numpy as np
 import Simulation_Func as SF
 import Graph_Code as GC
@@ -305,9 +307,11 @@ class ParameterChooser(QWidget):
         frame_v = frame_v[index, :]
         frame_fitnessToT = frame_fitnessToT[index, :]
 
-        np.save('frame_a.npy', frame_a)
-        np.save('frame_x.npy', frame_x)
-        np.save('frame_d.npy', frame_d)
+        #find os path compatible windows/linux/mac
+        dir_path = os.path.dirname(os.path.abspath(__file__))
+        np.save(os.path.join(dir_path, 'frame_a.npy'), frame_a)
+        np.save(os.path.join(dir_path, 'frame_x.npy'), frame_x)
+        np.save(os.path.join(dir_path, 'frame_d.npy'), frame_d)
 
         print("finished")
 
@@ -315,7 +319,8 @@ class ParameterChooser(QWidget):
         # Generate the graph and save it as an image
         GC.create_frame_x_graph_2()
         # Load the image into the QLabel
-        pixmap = QPixmap("frame_x.png")
+        dir_path = os.path.dirname(os.path.abspath(__file__))
+        pixmap = QPixmap(os.path.join(dir_path, "frame_x.png"))
         self.graph_label.setPixmap(pixmap)
         self.graph_label.resize(pixmap.width(), pixmap.height())
         print("finished")
@@ -324,7 +329,8 @@ class ParameterChooser(QWidget):
         # Generate the graph and save it as an image
         GC.create_graph_pop_type_2()
         # Load the image into the QLabel
-        pixmap = QPixmap("pop_type.png")
+        dir_path = os.path.dirname(os.path.abspath(__file__))
+        pixmap = QPixmap(os.path.join(dir_path, "frame_a.png"))
         self.graph_label.setPixmap(pixmap)
         self.graph_label.resize(pixmap.width(), pixmap.height())
         print("finished")
