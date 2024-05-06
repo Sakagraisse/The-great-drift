@@ -24,7 +24,10 @@ start = time.time()
 x_i, d_i, a_i, fitness = SF.main_loop(period, 2, frame_a, frame_x, frame_d, mu, step_size, to_migrate, truc, group_size, number_groups, num_interactions)
 end = time.time()
 
-
+index = np.linspace(0, frame_x.shape[0] - 1, 75).astype(int)
+frame_x= frame_x[index, :]
+frame_a = frame_a[index, :]
+frame_d = frame_d[index, :]
 
 
 print("Execution time: ", end - start,"for", period, "iterations.")
