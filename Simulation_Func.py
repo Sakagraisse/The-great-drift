@@ -11,7 +11,8 @@ from tqdm import tqdm
 
 #Create numba arrays
 
-
+#seed
+np.random.seed(0)
 #POP creation
 
 @nb.jit(nopython=True)
