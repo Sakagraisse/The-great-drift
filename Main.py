@@ -10,7 +10,7 @@ number_groups = 40
 num_interactions = 10
 to_migrate = 8
 
-period = 50000
+period = 30000
 mu = 0.02
 step_size = 0.025
 truc = 0.5
