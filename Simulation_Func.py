@@ -65,6 +65,7 @@ def migration(x_i, d_i, a_i, store_interaction, endo_fit, fitness, to_migrate,nu
     """
     Create the migration of pop groups
     """
+
     temp_x_i = np.empty((number_groups,to_migrate), dtype=np.float64)
     temp_d_i = np.empty((number_groups,to_migrate), dtype=np.float64)
     temp_a_i = np.empty((number_groups,to_migrate), dtype=np.float64)
@@ -92,7 +93,7 @@ def migration(x_i, d_i, a_i, store_interaction, endo_fit, fitness, to_migrate,nu
     temp_d_i = temp_d_i.flatten()
     temp_a_i = temp_a_i.flatten()
     temp_fitness = temp_fitness.flatten()
-    indices2 = np.arange(to_migrate)
+    indices2 = np.arange((to_migrate*number_groups))
     np.random.shuffle(indices2)
     temp_x_i = temp_x_i[indices2]
     temp_d_i = temp_d_i[indices2]
@@ -185,7 +186,7 @@ def main_loop(period, transfert_multiplier, frame_a, frame_x, frame_d, mu, step_
         store_data(x_i, d_i, a_i, frame_a, frame_x, frame_d, i)
 
         # migration
-        #x_i, d_i, a_i,fitness = migration(x_i, d_i, a_i, store_interaction, endo_fit, fitness, to_migrate, number_groups, group_size)
+        x_i, d_i, a_i,fitness = migration(x_i, d_i, a_i, store_interaction, endo_fit, fitness, to_migrate, number_groups, group_size)
         # social dilemna
         x_i, d_i, a_i, store_interaction, endo_fit, fitness = social_dilemma(x_i, d_i, a_i, store_interaction, endo_fit, fitness, number_groups, group_size, num_interactions, transfert_multiplier, truc)
         # reproduction
