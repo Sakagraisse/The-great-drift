@@ -28,8 +28,7 @@ transfert_multiplier = 2
 
 #run the main loop
 start = time.time()
-frame_a, frame_x, frame_d, frame_t, frame_u, frame_v, frame_fitnessToT = \
-    SF.main_loop_iterated(group_size, number_groups, num_interactions, period, frame_a, frame_x, frame_d, frame_t, \
+SF.main_loop_iterated(group_size, number_groups, num_interactions, period, frame_a, frame_x, frame_d, frame_t, \
                                 frame_u, frame_v, frame_fitnessToT, mu, step_size, \
                                 coupled, to_migrate, transfert_multiplier, truc)
 

@@ -10,7 +10,8 @@ from tqdm import tqdm
 ################
 
 #Create numba arrays
-
+#seed np.random
+np.random.seed(0)
 
 #POP creation
 
@@ -30,7 +31,7 @@ def create_initial_pop(group_size, number_groups, num_interactions):
     endo_fit = np.empty((number_groups, group_size,num_interactions), dtype=np.float64)
     fitnessIN = np.empty((number_groups, group_size), dtype=np.float64)
     fitnessOUT = np.zeros((number_groups, group_size), dtype=np.float64)
-    fitnessToT = np.empty((number_groups, group_size), dtype=np.float64)
+    fitnessToT = np.zeros((number_groups, group_size), dtype=np.float64)
 
     return x_i, d_i, a_i, t_i, u_i, v_j, store_interaction, endo_fit, fitnessIN, fitnessOUT, fitnessToT
 
@@ -81,7 +82,7 @@ def move_groups(x_i, d_i, a_i, t_i, u_i, v_i, indices):
     t_i = t_i[indices, :]
     u_i = u_i[indices, :]
     v_i = v_i[indices, :]
-    return x_i, d_i, a_i, t_i, u_i, v_i
+    return
 
 
 
@@ -186,7 +187,7 @@ def IN_social_dilemma(x_i, d_i, a_i, store_interaction, endo_fit, fitnessIN, num
                     fitnessIN[j, p1] +=  1 - store_interaction[j, p1, k] + store_interaction[j, p2, k] * transfert_multiplier
                     fitnessIN[j, p2] += 1 - store_interaction[j, p2, k] + store_interaction[j, p1, k] * transfert_multiplier
 
-    return store_interaction, endo_fit, fitnessIN
+    return
 
 
 @nb.jit(nopython=True)
@@ -285,6 +286,7 @@ def replace_group_comp(x_i, d_i, a_i, t_i, u_i, v_i, fitnessToT, indices_group, 
         G1 = indices_group[j]
         G2 = indices_group[j+1]
         if do_compete[G1] and do_compete[G2]:
+            print("Both groups compete")
             if victory[G1]:
                 won = G1
                 lost = G2
@@ -295,14 +297,14 @@ def replace_group_comp(x_i, d_i, a_i, t_i, u_i, v_i, fitnessToT, indices_group, 
             #same with the rest of parameters
             t_i[lost], u_i[lost], v_i[lost] = reproduction_one_group(t_i[won], u_i[won], v_i[won], fitnessToT[won], mu, step_size)
         elif not do_compete[G1] and not do_compete[G2]:
-            x_i[G1], d_i[G1], a_i[G1] = reproduction_one_group(x_i[G1], d_i[G1], a_i[G1], fitnessToT[G1], mu, step_size)
-            t_i[G1], u_i[G1], v_i[G1] = reproduction_one_group(t_i[G1], u_i[G1], v_i[G1], fitnessToT[G1], mu, step_size)
-            x_i[G2], d_i[G2], a_i[G2] = reproduction_one_group(x_i[G2], d_i[G2], a_i[G2], fitnessToT[G2], mu, step_size)
-            t_i[G2], u_i[G2], v_i[G2] = reproduction_one_group(t_i[G2], u_i[G2], v_i[G2], fitnessToT[G2], mu, step_size)
+            x_i[G1,:], d_i[G1,:], a_i[G1,:] = reproduction_one_group(x_i[G1,:], d_i[G1,:], a_i[G1,:], fitnessToT[G1,:], mu, step_size)
+            t_i[G1,:], u_i[G1,:], v_i[G1,:] = reproduction_one_group(t_i[G1,:], u_i[G1,:], v_i[G1,:], fitnessToT[G1,:], mu, step_size)
+            x_i[G2,:], d_i[G2,:], a_i[G2,:] = reproduction_one_group(x_i[G2,:], d_i[G2,:], a_i[G2,:], fitnessToT[G2,:], mu, step_size)
+            t_i[G2,:], u_i[G2,:], v_i[G2,:] = reproduction_one_group(t_i[G2,:], u_i[G2,:], v_i[G2,:], fitnessToT[G2,:], mu, step_size)
 
 
 
-    return x_i, d_i, a_i, t_i, u_i, v_i
+    return
 
 
 @nb.jit(nopython=True)
@@ -417,8 +419,9 @@ def main_loop_iterated(group_size, number_groups, num_interactions, period, fram
 
     x_i, d_i, a_i, t_i, u_i, v_i, store_interaction, endo_fit, fitnessIN, fitnessOUT, fitnessToT \
         = create_initial_pop(group_size, number_groups, num_interactions)
-    victory = np.zeros(number_groups, dtype=np.bool_)
+
     do_compete = np.zeros(number_groups, dtype=np.bool_)
+    victory = np.zeros(number_groups, dtype=np.bool_)
 
     for i in range(0, period, 1):
         print("Progress:", round((i / period) * 100), "%")
@@ -427,32 +430,31 @@ def main_loop_iterated(group_size, number_groups, num_interactions, period, fram
                    frame_fitnessToT, i)
 
 
+        #Movement in metapopulation
         indices = meta_pop(number_groups)
+        move_groups(x_i, d_i, a_i, t_i, u_i, v_i, indices)
 
-        x_i, d_i, a_i, t_i, u_i, v_i = move_groups(x_i, d_i, a_i, t_i, u_i, v_i, indices)
-
+        #Migration(Coupled)
         if coupled:
             x_i, d_i, a_i, t_i, u_i, v_i = migration(x_i, d_i, a_i, t_i, u_i, v_i, to_migrate, number_groups, group_size)
 
-        store_interaction, endo_fit, fitnessIN = IN_social_dilemma(x_i, d_i, a_i, store_interaction, endo_fit,\
-                                                                   fitnessIN, number_groups, group_size,\
+        #Social Dilemma
+        IN_social_dilemma(x_i, d_i, a_i, store_interaction, endo_fit, fitnessIN, number_groups, group_size,\
                                                                     num_interactions, transfert_multiplier)
 
-        indices_group = np.arange(number_groups)
-        np.random.shuffle(indices_group)
-
-
+        #Migration (Decoupled)
         if not coupled:
-            x_i, d_i, a_i, t_i, u_i, v_i, = \
              migration(x_i, d_i, a_i, t_i, u_i, v_i, to_migrate, number_groups, group_size)
 
+        #Total fitness Calulation per individual
         fitnessToT = fitnessToT_calculation(fitnessIN, fitnessOUT, fitnessToT, number_groups, group_size, truc, num_interactions)
 
 
-        x_i, d_i, a_i, t_i, u_i, v_i = replace_group_comp(x_i, d_i, a_i, t_i, u_i, v_i, fitnessToT,\
-                                                          indices_group, victory, do_compete, mu, step_size,\
-                                                            number_groups)
+        #Reproduction
+        indices_group = np.arange(number_groups)
+        np.random.shuffle(indices_group)
+        replace_group_comp(x_i, d_i, a_i, t_i, u_i, v_i, fitnessToT, indices_group, victory, do_compete, mu, step_size, number_groups)
 
 
-    return frame_a, frame_x, frame_d, frame_t, frame_u, frame_v, frame_fitnessToT
+    return
 
