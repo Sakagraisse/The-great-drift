@@ -10,7 +10,7 @@ number_groups = 40
 num_interactions = 10
 to_migrate = 8
 
-period = 30000
+period = 10000
 mu = 0.02
 step_size = 0.025
 truc = 0.5
@@ -36,6 +36,14 @@ SF.main_loop_iterated(group_size, number_groups, num_interactions, period, frame
 
 end = time.time()
 
+index = np.linspace(0, frame_x.shape[0] - 1, 75).astype(int)
+frame_x= frame_x[index, :]
+frame_a = frame_a[index, :]
+frame_d = frame_d[index, :]
+frame_t = frame_t[index, :]
+frame_u = frame_u[index, :]
+frame_v = frame_v[index, :]
+frame_fitnessToT = frame_fitnessToT[index, :]
 
 
 

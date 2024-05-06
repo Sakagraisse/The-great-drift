@@ -29,7 +29,7 @@ def create_initial_pop(group_size, number_groups, num_interactions):
 
     store_interaction = np.empty((number_groups, group_size,num_interactions), dtype=np.float64)
     endo_fit = np.empty((number_groups, group_size,num_interactions), dtype=np.float64)
-    fitnessIN = np.empty((number_groups, group_size), dtype=np.float64)
+    fitnessIN = np.zeros((number_groups, group_size), dtype=np.float64)
     fitnessOUT = np.zeros((number_groups, group_size), dtype=np.float64)
     fitnessToT = np.zeros((number_groups, group_size), dtype=np.float64)
 
@@ -160,9 +160,8 @@ def IN_social_dilemma(x_i, d_i, a_i, store_interaction, endo_fit, fitnessIN, num
         indices = np.arange(group_size)
         np.random.shuffle(indices)
 
-        fitnessIN[j,:] = np.empty(group_size, dtype=np.float64)
-        store_interaction[j,:,:] = np.empty((group_size,num_interactions), dtype=np.float64)
-        endo_fit[j,:,:] = np.empty((group_size,num_interactions), dtype=np.float64)
+        fitnessIN[j,:] = np.zeros(group_size, dtype=np.float64)
+        store_interaction[j,:,:] = np.zeros((group_size,num_interactions), dtype=np.float64)
 
         for i in range(0, group_size, 2):
             p1 = indices[i]
@@ -170,8 +169,6 @@ def IN_social_dilemma(x_i, d_i, a_i, store_interaction, endo_fit, fitnessIN, num
             store_interaction[j, p1, 0] = x_i[j, p1]
             store_interaction[j, p2, 0] = a_i[j, p2] + (d_i[j, p2] - a_i[j, p2]) * \
                                                store_interaction[j, p1, 0]
-            endo_fit[j, p1, 0] = 1 - store_interaction[j, p1, 0] + store_interaction[j, p2, 0] * transfert_multiplier
-            endo_fit[j, p2, 0] = 1 - store_interaction[j, p2, 0] + store_interaction[j, p1, 0] * transfert_multiplier
 
             fitnessIN[j, p1] = 1 - store_interaction[j, p1, 0] + store_interaction[j, p2, 0] * transfert_multiplier
             fitnessIN[j, p2] = 1 - store_interaction[j, p2, 0] + store_interaction[j, p1, 0] * transfert_multiplier
@@ -179,12 +176,9 @@ def IN_social_dilemma(x_i, d_i, a_i, store_interaction, endo_fit, fitnessIN, num
             if num_interactions > 1:
                 for k in range(1,num_interactions):
                     store_interaction[j, p1, k] = a_i[j, p1] + (d_i[j, p1] - a_i[j, p1]) * store_interaction[j, p2, k-1]
-                    store_interaction[j, (i+1), k] = a_i[j, (i+1)] + (d_i[j, (i+1)] - a_i[j, (i+1)]) * store_interaction[j, i, k]
+                    store_interaction[j, p2, k] = a_i[j, p2] + (d_i[j, p2] - a_i[j, p2]) * store_interaction[j, p1, k]
 
-                    endo_fit[j, p1, k] = 1 - store_interaction[j, p1, k] + store_interaction[j, p2, k] * transfert_multiplier
-                    endo_fit[j, p2, k] = 1 - store_interaction[j, p2, k] + store_interaction[j, p1, k] * transfert_multiplier
-
-                    fitnessIN[j, p1] +=  1 - store_interaction[j, p1, k] + store_interaction[j, p2, k] * transfert_multiplier
+                    fitnessIN[j, p1] += 1 - store_interaction[j, p1, k] + store_interaction[j, p2, k] * transfert_multiplier
                     fitnessIN[j, p2] += 1 - store_interaction[j, p2, k] + store_interaction[j, p1, k] * transfert_multiplier
 
     return
@@ -217,8 +211,8 @@ def fitnessToT_calculation(fitnessIN, fitnessOUT, fitnessToT, number_groups, gro
     """
     for j in range(number_groups):
         for i in range(group_size):
-            fitnessToT[j,i] = (1-truc)*num_interactions + truc * fitnessIN[j,i] + truc*fitnessOUT[j,i]
-    return fitnessToT
+            fitnessToT[j,i] = (1-truc)*num_interactions + truc *(fitnessIN[j,i] + truc*fitnessOUT[j,i])
+    return
 
 @nb.jit(nopython=True)
 def intergroup_comp(fitnessToT, number_groups, group_size, truc, transfert_multiplier, num_interactions,theta, victory,indices_group,lambda_param,do_compete):
@@ -280,8 +274,6 @@ def replace_group_comp(x_i, d_i, a_i, t_i, u_i, v_i, fitnessToT, indices_group, 
     """
     Replace the group
     """
-
-
     for j in range(0,number_groups, 2):
         G1 = indices_group[j]
         G2 = indices_group[j+1]
@@ -447,7 +439,7 @@ def main_loop_iterated(group_size, number_groups, num_interactions, period, fram
              migration(x_i, d_i, a_i, t_i, u_i, v_i, to_migrate, number_groups, group_size)
 
         #Total fitness Calulation per individual
-        fitnessToT = fitnessToT_calculation(fitnessIN, fitnessOUT, fitnessToT, number_groups, group_size, truc, num_interactions)
+        fitnessToT_calculation(fitnessIN, fitnessOUT, fitnessToT, number_groups, group_size, truc, num_interactions)
 
 
         #Reproduction
