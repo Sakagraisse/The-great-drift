@@ -8,9 +8,9 @@ import time
 group_size = 24
 number_groups = 40
 num_interactions = 10
-to_migrate = 16
+to_migrate = 8
 
-period = 100
+period = 30000
 mu = 0.02
 step_size = 0.025
 truc = 0.5
@@ -28,12 +28,13 @@ transfert_multiplier = 2
 
 #run the main loop
 start = time.time()
-SF.main_loop_iterated(group_size, number_groups, num_interactions, period, frame_a, frame_x, frame_d, frame_t, \
+frame_a, frame_x, frame_d, frame_t, frame_u, frame_v, frame_fitnessToT = \
+    SF.main_loop_iterated(group_size, number_groups, num_interactions, period, frame_a, frame_x, frame_d, frame_t, \
                                 frame_u, frame_v, frame_fitnessToT, mu, step_size, \
                                 coupled, to_migrate, transfert_multiplier, truc)
 
 
-print(frame_x[1, :])
+
 end = time.time()
 
 
