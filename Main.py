@@ -8,7 +8,7 @@ import time
 group_size = 24
 number_groups = 40
 num_interactions = 10
-to_migrate = 8
+to_migrate = 16
 
 period = 50000
 mu = 0.02

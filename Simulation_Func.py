@@ -54,11 +54,53 @@ def mutate(value, mu, step_size):
             new_value = value
 
     return new_value
-def meta_pop(pop):
+
+
+@nb.jit(nopython=True)
+def setdiff1d_numba(arr1, arr2):
+    return np.asarray(list(set(arr1) - set(arr2)))
+@nb.jit(nopython=True)
+def meta_pop():
     """
-    Create the movement of pop groups
+    Return a vector of groups to form the meta-population for out-group interactions
     """
-    pass
+    #generate a random number between 0, 20 , 40
+    to_move = np.random.choice(np.array([0, 20, 40]))
+    #generate a vector of to_move elements with random ints between 0 and 40
+    indices = np.random.choice(np.arange(40), to_move, replace=False)
+    # Get the remaining indices
+    remain_indices = setdiff1d_numba(np.arange(40), indices)
+
+    return indices, remain_indices
+
+@nb.jit(nopython=True)
+def out_group_competition(t_i,u_i,v_j,fitness2,group_size, number_groups,transfert_multiplier):
+    """
+    Create the out-group competition
+    """
+    indices,remain = meta_pop()
+    for j in range(len(indices),2):
+        indices = np.arange(group_size)
+        np.random.shuffle(indices)
+        t_i[j,:] = t_i[j,indices]
+        u_i[j,:] = u_i[j,indices]
+        v_j[j,:] = v_j[j,indices]
+        fitness2[j,:] = np.empty(group_size, dtype=np.float64)
+        np.random.shuffle(indices)
+        t_i[(j+1),:] = t_i(j+1,indices)
+        u_i[(j+1),:] = u_i(j+1,indices)
+        v_j[(j+1),:] = v_j(j+1,indices)
+        fitness2[(j+1),:] = np.empty(group_size, dtype=np.float64)
+        for i in range(group_size):
+            temp_x_i = t_i[j,i]
+            temp_y_i = u_i[(j+1),i] + (v_j[(j+1),i] - u_i[(j+1),i]) * temp_x_i
+            fitness2[j,i] = 1 - temp_x_i + temp_y_i*transfert_multiplier
+            fitness2[(j+1),i] = 1 - temp_y_i[(j+1),i] + temp_x_i*transfert_multiplier
+
+    return fitness2
+
+
+
 
 @nb.jit(nopython=True)
 def migration(x_i, d_i, a_i, store_interaction, endo_fit, fitness, to_migrate,number_groups, group_size):
@@ -152,25 +194,56 @@ def social_dilemma(x_i, d_i, a_i, store_interaction, endo_fit, fitness, number_g
 
     return x_i, d_i, a_i, store_interaction, endo_fit, fitness
 
+
+
+@nb.jit(nopython=True)
+def replace_group_comp(x_i, d_i, a_i, fitness, mu, step_size,competition_list, remaining,victory):
+
+    """
+    Replace the group
+    """
+    for j in range(len(remaining), 2):
+        if victory[j]:
+            won = int(competition_list[j])
+            lost = int(competition_list[j + 1])
+        else:
+            won = int(competition_list[j + 1])
+            lost = int(competition_list[j])
+        x_i[lost], d_i[lost], a_i[lost] = reproduction_one_group(x_i[won], d_i[won], a_i[won], fitness[won], mu,
+                                                                 step_size)
+
+    for j in remaining:
+        x_i[j], d_i[j], a_i[j] = reproduction_one_group(x_i[j], d_i[j], a_i[j], fitness[j], mu, step_size)
+
+    return x_i, d_i, a_i, fitness
+
+
 @nb.jit(nopython=True)
 def reproduction(x_i, d_i, a_i, fitness, mu, step_size):
     """
     Reproduction of the population
     """
     for j in range(x_i.shape[0]):
-        #for x_i
-        x_i[j, :] = return_pop_vector_Ui(x_i[j, :], fitness[j, :])
-        #for d_i
-        d_i[j, :] = return_pop_vector_Ui(d_i[j, :], fitness[j, :])
-        #for a_i
-        a_i[j, :] = return_pop_vector_Ui(a_i[j, :], fitness[j, :])
-        for i in range(x_i.shape[1]):
-            x_i[j, i] = mutate(x_i[j, i], mu, step_size)
+        x_i[j], d_i[j], a_i[j] = reproduction_one_group(x_i[j], d_i[j], a_i[j], fitness[j], mu, step_size)
 
-            d_i[j, i] = mutate(d_i[j, i], mu, step_size)
-
-            a_i[j, i] = mutate(a_i[j, i], mu, step_size)
     return x_i, d_i, a_i
+
+@nb.jit(nopython=True)
+def reproduction_one_group(v1,v2,v3, fitness, mu, step_size):
+    """
+    Reproduction of one group of the population
+    """
+    #for x_i
+    v1 = return_pop_vector_Ui(v1, fitness)
+    #for d_i
+    v2 = return_pop_vector_Ui(v2, fitness)
+    #for a_i
+    v3 = return_pop_vector_Ui(v3, fitness)
+    for i in range(v1.shape[0]):
+        v1[i] = mutate(v1[i], mu, step_size)
+        v2[i] = mutate(v2[i], mu, step_size)
+        v3[i] = mutate(v3[i], mu, step_size)
+    return v1, v2, v3
 
 
 @nb.jit(nopython=True)
@@ -240,4 +313,24 @@ def costum_shuffle_pop(x_i,a_i,d_i,fitness):
 
 
 
+@nb.jit(nopython=True)
+def group_comp(fitnessToT,competition_list,remaining,group_size, truc, transfert_multiplier, num_interactions,theta, victory):
 
+
+    delta = group_size * truc*(num_interactions*(transfert_multiplier-1)+1(transfert_multiplier+1))
+    for i in range(len(competition_list),2):
+        fitnessTot_G1 = np.sum(fitnessToT[competition_list[i]])
+        fitnessTot_G2 = np.sum(fitnessToT[competition_list[i+1]])
+        proba_competition =( np.abs(fitnessTot_G1 - fitnessTot_G2) / delta)/(theta + np.abs(fitnessTot_G1 - fitnessTot_G2) / delta)
+        if np.random.random() < proba_competition:
+            proba_victory = 1 / (1 + np.exp((theta / delta) * (fitnessTot_G1 - fitnessTot_G2)))
+            if np.random.random() < proba_victory:
+                victory[i] = True
+                victory[i+1] = False
+            else:
+                victory[i] = False
+                victory[i+1] = True
+
+        else:
+            pass
+    return victory
