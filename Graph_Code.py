@@ -91,11 +91,13 @@ def create_graph_pop_type_2():
                 frame_a_bins[j, 8] += 1
 
 
+    print(frame_a_shorten[50, :])
+
+
 
 
     for i in range(0, 75, 1):
         sum_q = np.sum(frame_a_bins[i, :])
-        print(sum_q)
         frame_a_bins[i, :] = frame_a_bins[i, :] / sum_q
     data = frame_a_bins
     #transposing the data
