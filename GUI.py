@@ -240,6 +240,16 @@ class ParameterChooser(QWidget):
             self.num_interactions_input.setValue(100)
             self.num_interactions_input.setEnabled(True)
 
+    def get_dir_size(self, path):
+        total_size = 0
+        for dirpath, dirnames, filenames in os.walk(path):
+            for f in filenames:
+                fp = os.path.join(dirpath, f)
+                # Skip if it is symbolic link
+                if not os.path.islink(fp):
+                    total_size += os.path.getsize(fp)
+        return total_size
+
     def submit(self):
         group_size = self.group_size_input.value()
         number_groups = self.number_groups_input.value()
@@ -267,13 +277,15 @@ class ParameterChooser(QWidget):
         print(f"Lambda Param: {lambda_param}")
         print(f"Theta: {theta}")
 
-        frame_a = np.empty((period, (group_size * number_groups)))
+        os.environ['NUMBA_CACHE_DIR'] = '/tmp/numba_cache/'
+
+        frame_a = np.zeros((period, (group_size * number_groups)))
         frame_x = np.zeros((period, (group_size * number_groups)))
-        frame_d = np.empty((period, (group_size * number_groups)))
-        frame_t = np.empty((period, (group_size * number_groups)))
-        frame_u = np.empty((period, (group_size * number_groups)))
-        frame_v = np.empty((period, (group_size * number_groups)))
-        frame_fitnessToT = np.empty((period, (group_size * number_groups)))
+        frame_d = np.zeros((period, (group_size * number_groups)))
+        frame_t = np.zeros((period, (group_size * number_groups)))
+        frame_u = np.zeros((period, (group_size * number_groups)))
+        frame_v = np.zeros((period, (group_size * number_groups)))
+        frame_fitnessToT = np.zeros((period, (group_size * number_groups)))
 
         if self.option1_button.isChecked():
             start = time.time()
@@ -315,6 +327,11 @@ class ParameterChooser(QWidget):
         np.save(os.path.join(dir_path, 'frame_d.npy'), frame_d)
 
         print("finished")
+
+        # Specify the path to your Numba cache directory
+        cache_size = self.get_dir_size(os.environ['NUMBA_CACHE_DIR'])
+        print(f"Numba cache directory size: {cache_size} bytes")
+
 
     def graph1(self):
         # Generate the graph and save it as an image

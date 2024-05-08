@@ -45,8 +45,8 @@ def create_frame_x_graph_2():
     return
 
 @nb.jit(nopython=True)
-def function_1(a,d,x):
-    y = a + (d-a)*x
+def function_1(a,b):
+    y = a/(a+1-b)
     return y
 def create_graph_pop_type_2():
     # Importer frame_a et frame_d à partir de fichiers csv
@@ -67,28 +67,35 @@ def create_graph_pop_type_2():
                 frame_a_bins[j, 0] += 1
             elif frame_a_shorten[j, i] == 0 and frame_d_shorten[j, i] < 1 and frame_d_shorten[j, i] > 0:
                 frame_a_bins[j, 1] += 1
-            elif frame_a_shorten[j, i] > 0 and frame_d_shorten[j, i] > 0.9 and \
-                    function_1(frame_a_shorten[j, i], frame_d_shorten[j, i], 0.1) < 0.1 and frame_d_shorten[j, i] < 1:
+            elif frame_a_shorten[j, i] > 0 and frame_a_shorten[j, i] < 1 \
+                    and frame_d_shorten[j, i] > 0 and frame_d_shorten[j, i] < 1 \
+                    and function_1(frame_a_shorten[j, i], frame_d_shorten[j, i]) <= 0.1:
                 frame_a_bins[j, 2] += 1
-            elif function_1(frame_a_shorten[j, i], frame_d_shorten[j, i], 0.1) > 0.1 and \
-                    function_1(frame_a_shorten[j, i], frame_d_shorten[j, i], 0.9) < 0.9 \
-                    and frame_a_shorten[j, i] < frame_d_shorten[j, i] :
+            elif frame_a_shorten[j, i] > 0 and frame_a_shorten[j, i] < 1 \
+                    and frame_d_shorten[j, i] > 0 and frame_d_shorten[j, i] < 1 \
+                    and function_1(frame_a_shorten[j, i], frame_d_shorten[j, i]) < 0.9\
+                    and function_1(frame_a_shorten[j, i], frame_d_shorten[j, i]) > 1\
+                    and frame_a_shorten[j, i] <= frame_d_shorten[j, i]:
                 frame_a_bins[j, 3] += 1
             elif frame_a_shorten[j, i] == 0 and frame_d_shorten[j, i] == 1:
                 frame_a_bins[j, 4] += 1
-            elif frame_d_shorten[j, i] < 1 and frame_d_shorten[j, i] > 0.9 and \
-                    function_1(frame_a_shorten[j, i], frame_d_shorten[j, i], 0.9) > 0.9\
-                    and frame_a_shorten[j, i] < 1:
+            elif frame_a_shorten[j, i] < 1 and frame_a_shorten[j, i] > 0 \
+                    and frame_d_shorten[j, i] < 1 and frame_d_shorten[j, i] > 0 \
+                    and function_1(frame_a_shorten[j, i], frame_d_shorten[j, i]) >= 0.9 :
                 frame_a_bins[j, 5] += 1
-            elif frame_a_shorten[j, i] > 0 and frame_a_shorten[j, i] < 1 and frame_d_shorten[j, i] == 1:
+            elif frame_a_shorten[j, i] > 0 and frame_a_shorten[j, i] < 1  and frame_d_shorten[j, i] == 1:
                 frame_a_bins[j, 6] += 1
             elif frame_a_shorten[j, i] == 1 and frame_d_shorten[j, i] == 1:
                 frame_a_bins[j, 7] += 1
             else:
                 frame_a_bins[j, 8] += 1
 
+
+
+
     for i in range(0, 75, 1):
         sum_q = np.sum(frame_a_bins[i, :])
+        print(sum_q)
         frame_a_bins[i, :] = frame_a_bins[i, :] / sum_q
     data = frame_a_bins
     #transposing the data

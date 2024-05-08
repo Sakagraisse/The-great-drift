@@ -10,11 +10,11 @@ import numba as nb
 
 #Create numba arrays
 #seed np.random
-np.random.seed(0)
+#np.random.seed(0)
 
 #POP creation
 
-@nb.jit(nopython=True)
+@nb.jit(nopython=True, cache=True)
 def create_initial_pop(group_size, number_groups, num_interactions):
     """
     Creates the initial population of players.
@@ -35,7 +35,7 @@ def create_initial_pop(group_size, number_groups, num_interactions):
     return x_i, d_i, a_i, t_i, u_i, v_j, store_interaction, endo_fit, fitnessIN, fitnessOUT, fitnessToT
 
 
-@nb.jit(nopython=True)
+@nb.jit(nopython=True, cache=True)
 def store_data(x_i, d_i, a_i, t_i, u_i , v_i,fitnessToT , frame_a, frame_x, frame_d, frame_t, frame_u, frame_v, frame_fitnessToT, period):
     """
     Store the data in a numpy array
@@ -49,11 +49,11 @@ def store_data(x_i, d_i, a_i, t_i, u_i , v_i,fitnessToT , frame_a, frame_x, fram
     frame_fitnessToT[period, :] = fitnessToT.flatten()
     return
 
-@nb.jit(nopython=True)
+@nb.jit(nopython=True, cache=True)
 def setdiff1d_numba(arr1, arr2):
     return np.asarray(list(set(arr1) - set(arr2)))
 
-@nb.jit(nopython=True)
+@nb.jit(nopython=True, cache=True)
 def meta_pop(number_groups):
     """
     Return a vector of groups to form the meta-population for out-group interactions
@@ -68,24 +68,29 @@ def meta_pop(number_groups):
     # Replace the selected indices in the original array with the shuffled version
     mask = np.array([i in subset_indices for i in indices])
     indices[np.where(mask)] = shuffled_subset
+    #suppress from memory
+    to_move = np.empty(0)
+    shuffled_subset = np.empty(0)
+    subset_indices = np.empty(0)
+    mask = np.empty(0)
     return indices
 
-@nb.jit(nopython=True)
+@nb.jit(nopython=True, cache=True)
 def move_groups(x_i, d_i, a_i, t_i, u_i, v_i, indices):
     """
     Move groups from one population to another
     """
-    x_i = x_i[indices, :]
-    d_i = d_i[indices, :]
-    a_i = a_i[indices, :]
-    t_i = t_i[indices, :]
-    u_i = u_i[indices, :]
-    v_i = v_i[indices, :]
+    x_i[:] = x_i[indices, :]
+    d_i[:] = d_i[indices, :]
+    a_i[:] = a_i[indices, :]
+    t_i[:] = t_i[indices, :]
+    u_i[:] = u_i[indices, :]
+    v_i[:] = v_i[indices, :]
     return
 
 
 
-@nb.jit(nopython=True)
+@nb.jit(nopython=True, cache=True)
 def migration(x_i, d_i, a_i,t_i,u_i,v_i, to_migrate,number_groups, group_size):
     """
     Create the migration of pop groups
@@ -145,12 +150,22 @@ def migration(x_i, d_i, a_i,t_i,u_i,v_i, to_migrate,number_groups, group_size):
         t_i[j,0:to_migrate] = temp_t_i[j*to_migrate:(j+1)*to_migrate]
         u_i[j,0:to_migrate] = temp_u_i[j*to_migrate:(j+1)*to_migrate]
         v_i[j,0:to_migrate] = temp_v_i[j*to_migrate:(j+1)*to_migrate]
+    # suppress from memory
+    temp_x_i = np.empty(0)
+    temp_d_i = np.empty(0)
+    temp_a_i = np.empty(0)
+    temp_t_i = np.empty(0)
+    temp_u_i = np.empty(0)
+    temp_v_i = np.empty(0)
+    indices2 = np.empty(0)
+    indices = np.empty(0)
+
     return x_i, d_i, a_i, t_i, u_i, v_i
 
 
 
 
-@nb.jit(nopython=True)
+@nb.jit(nopython=True, cache=True)
 def IN_social_dilemma(x_i, d_i, a_i, store_interaction, endo_fit, fitnessIN, number_groups, group_size, num_interactions, transfert_multiplier):
     """
     Create the social dilemma
@@ -180,10 +195,14 @@ def IN_social_dilemma(x_i, d_i, a_i, store_interaction, endo_fit, fitnessIN, num
                     fitnessIN[j, p1] += 1 - store_interaction[j, p1, k] + store_interaction[j, p2, k] * transfert_multiplier
                     fitnessIN[j, p2] += 1 - store_interaction[j, p2, k] + store_interaction[j, p1, k] * transfert_multiplier
 
+    # suppress from memory
+    indices = np.empty(0)
+
+
     return
 
 
-@nb.jit(nopython=True)
+@nb.jit(nopython=True, cache=True)
 def OUT_social_dilemma(t_i,u_i,v_j,fitnessOUT,group_size, number_groups,transfert_multiplier,indices_group):
     """
     Create the out-group competition
@@ -200,9 +219,14 @@ def OUT_social_dilemma(t_i,u_i,v_j,fitnessOUT,group_size, number_groups,transfer
             fitnessOUT[g1,p] = 1 - temp_x + temp_y * transfert_multiplier
             fitnessOUT[g1,p] = 1 - temp_y + temp_x * transfert_multiplier
 
+    # suppress from memory
+    indices_in_group = np.empty(0)
+    temp_x = np.empty(0)
+    temp_y = np.empty(0)
+
     return
 
-@nb.jit(nopython=True)
+@nb.jit(nopython=True, cache=True)
 def fitnessToT_calculation(fitnessIN, fitnessOUT, fitnessToT, number_groups, group_size,truc,num_interactions,compi = 0):
     """
     Calculate the total fitness
@@ -212,7 +236,7 @@ def fitnessToT_calculation(fitnessIN, fitnessOUT, fitnessToT, number_groups, gro
             fitnessToT[j,i] = (1-truc)*(num_interactions + compi) + truc *(fitnessIN[j,i] + truc*fitnessOUT[j,i])
     return
 
-@nb.jit(nopython=True)
+@nb.jit(nopython=True, cache=True)
 def intergroup_comp(fitnessToT, number_groups, group_size, truc, transfert_multiplier, num_interactions,theta, victory,indices_group,lambda_param,do_compete):
 
     delta = group_size * truc*(num_interactions*(transfert_multiplier-1)+(transfert_multiplier+1))
@@ -239,7 +263,7 @@ def intergroup_comp(fitnessToT, number_groups, group_size, truc, transfert_multi
             do_compete[G2] = False
     return
 
-@nb.jit(nopython=True)
+@nb.jit(nopython=True, cache=True)
 def mutate(value, mu, step_size):
     """
     Applies a mutation to the given value based on the mutation probability mu.
@@ -263,10 +287,11 @@ def mutate(value, mu, step_size):
             # The value remains the same
             new_value = value
 
+
     return new_value
 
 
-@nb.jit(nopython=True)
+@nb.jit(nopython=True, cache=True)
 def replace_group_comp(x_i, d_i, a_i, t_i, u_i, v_i, fitnessToT, indices_group, victory, do_compete, mu, step_size,number_groups):
 
     """
@@ -296,10 +321,11 @@ def replace_group_comp(x_i, d_i, a_i, t_i, u_i, v_i, fitnessToT, indices_group, 
         else :
             # raise an error in due form
             raise ValueError("The groups are not in the same state")
+
     return
 
 
-@nb.jit(nopython=True)
+@nb.jit(nopython=True, cache=True)
 def reproduction_one_group(v1,v2,v3, fitness, mu, step_size):
     """
     Reproduction of one group of the population
@@ -317,7 +343,7 @@ def reproduction_one_group(v1,v2,v3, fitness, mu, step_size):
     return v1, v2, v3
 
 
-@nb.jit(nopython=True)
+@nb.jit(nopython=True, cache=True)
 def custom_random_choice(prob):
     # Generate a random number
     rand = np.random.random()
@@ -325,10 +351,17 @@ def custom_random_choice(prob):
     # Find the index where the cumulative sum exceeds the random number
     for i in range(len(cum_prob)):
         if rand < cum_prob[i]:
+            # suppress from memory
+            rand = np.empty(0)
+            cum_prob = np.empty(0)
             return i
+
+    # suppress from memory
+    rand = np.empty(0)
+    cum_prob = np.empty(0)
     return len(prob) - 1
 
-@nb.jit(nopython=True)
+@nb.jit(nopython=True, cache=True)
 def return_pop_vector_Ui(value,fitness):
 
     sum = np.sum(fitness)
@@ -337,9 +370,14 @@ def return_pop_vector_Ui(value,fitness):
     test = np.empty(test_size, dtype=np.float64)
     for i in range(test_size):
         test[i] = value[custom_random_choice(prob)]
+
+    # suppress from memory
+    sum = np.empty(0)
+    prob = np.empty(0)
+    test_size = np.empty(0)
     return test
 
-@nb.jit(nopython=True)
+@nb.jit(nopython=True, cache=True)
 def costum_shuffle_pop(x_i,a_i,d_i,fitness):
     indices = np.arange(x_i.shape[0])
     np.random.shuffle(indices)
@@ -347,10 +385,13 @@ def costum_shuffle_pop(x_i,a_i,d_i,fitness):
     d_i = d_i[indices]
     a_i = a_i[indices]
     fitness = fitness[indices]
+
+    # suppress from memory
+    indices = np.empty(0)
     return x_i, a_i, d_i, fitness
 
 
-@nb.jit(nopython=True)
+@nb.jit(nopython=True, cache=True)
 def main_loop_group_competition(group_size, number_groups, num_interactions, period, frame_a, frame_x, frame_d, frame_t,\
                                 frame_u, frame_v, frame_fitnessToT, mu, step_size,\
                                 coupled, to_migrate, transfert_multiplier, truc, lambda_param, theta):
@@ -391,10 +432,11 @@ def main_loop_group_competition(group_size, number_groups, num_interactions, per
 
         replace_group_comp(x_i, d_i, a_i, t_i, u_i, v_i, fitnessToT, indices_group, victory, do_compete, mu, step_size,number_groups)
 
+    # suppress from memory
     return
 
 
-@nb.jit(nopython=True)
+#@nb.jit(nopython=True, cache=True)
 def main_loop_iterated(group_size, number_groups, num_interactions, period, frame_a, frame_x, frame_d, frame_t, \
                                 frame_u, frame_v, frame_fitnessToT, mu, step_size, \
                                 coupled, to_migrate, transfert_multiplier, truc):
@@ -440,7 +482,7 @@ def main_loop_iterated(group_size, number_groups, num_interactions, period, fram
 
     return
 
-@nb.jit(nopython=True)
+@nb.jit(nopython=True, cache=True)
 def joint_scenario(group_size, number_groups, num_interactions, period, frame_a, frame_x, frame_d,
                    frame_t, frame_u, frame_v, frame_fitnessToT, mu, step_size, \
                    coupled, to_migrate, transfert_multiplier, truc, lambda_param, theta):
