@@ -440,5 +440,54 @@ def main_loop_iterated(group_size, number_groups, num_interactions, period, fram
 
     return
 
+@nb.jit(nopython=True)
+def joint_scenario(group_size, number_groups, num_interactions, period, frame_a, frame_x, frame_d,
+                   frame_t, frame_u, frame_v, frame_fitnessToT, mu, step_size, \
+                   coupled, to_migrate, transfert_multiplier, truc, lambda_param, theta):
+
+    x_i, d_i, a_i, t_i, u_i, v_i, store_interaction, endo_fit, fitnessIN, fitnessOUT, fitnessToT \
+        = create_initial_pop(group_size, number_groups, num_interactions)
+
+    x_i = np.zeros((number_groups, group_size), dtype=np.float64)
+    d_i = np.zeros((number_groups, group_size), dtype=np.float64)
+    a_i = np.zeros((number_groups, group_size), dtype=np.float64)
+
+    victory = np.zeros(number_groups, dtype=np.bool_)
+    do_compete = np.zeros(number_groups, dtype=np.bool_)
+
+    for i in range(0, period, 1):
+        print("Progress:", round((i / period) * 100), "%")
+        # store the data
+        store_data(x_i, d_i, a_i, t_i, u_i, v_i, fitnessToT, frame_a, frame_x, frame_d, frame_t, frame_u, frame_v, \
+                   frame_fitnessToT, i)
+
+        indices = meta_pop(number_groups)
+        move_groups(x_i, d_i, a_i, t_i, u_i, v_i, indices)
+
+        if coupled:
+            migration(x_i, d_i, a_i, t_i, u_i, v_i, to_migrate, number_groups, group_size)
+
+        IN_social_dilemma(x_i, d_i, a_i, store_interaction, endo_fit, fitnessIN, number_groups, group_size,
+                          num_interactions, transfert_multiplier)
+
+        indices_group = np.arange(number_groups)
+        np.random.shuffle(indices_group)
+
+        OUT_social_dilemma(t_i, u_i, v_i, fitnessOUT, group_size, number_groups, transfert_multiplier,
+                           indices_group)
+
+        if not coupled:
+            migration(x_i, d_i, a_i, t_i, u_i, v_i, to_migrate, number_groups, group_size)
+
+        fitnessToT_calculation(fitnessIN, fitnessOUT, fitnessToT, number_groups, group_size, truc, num_interactions,
+                               1)
+
+        intergroup_comp(fitnessToT, number_groups, group_size, truc, transfert_multiplier, num_interactions, theta,
+                        victory, indices_group, lambda_param, do_compete)
+
+        replace_group_comp(x_i, d_i, a_i, t_i, u_i, v_i, fitnessToT, indices_group, victory, do_compete, mu,
+                           step_size, number_groups)
+
+    return
 
 

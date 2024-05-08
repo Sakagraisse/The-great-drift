@@ -42,6 +42,7 @@ class ParameterChooser(QWidget):
         self.number_groups_label = QLabel("Number of Groups")
         self.number_groups_input = QSpinBox()
         self.number_groups_input.setRange(1, 100)
+        self.number_groups_input.setSingleStep(10)
         self.number_groups_input.setValue(40)  # Set default value
         self.base_parameters_layout.addWidget(self.number_groups_label, 1, 0)
         self.base_parameters_layout.addWidget(self.number_groups_input, 1, 1)
@@ -291,7 +292,7 @@ class ParameterChooser(QWidget):
             print("Execution time: ", end - start, "for", period, "iterations.")
         else:
             start = time.time()
-            SF.main_loop_group_competition(group_size, number_groups, num_interactions, period, frame_a, frame_x,
+            SF.joint_scenario(group_size, number_groups, num_interactions, period, frame_a, frame_x,
                                            frame_d, frame_t, \
                                            frame_u, frame_v, frame_fitnessToT, mu, step_size, coupled, to_migrate,
                                            transfert_multiplier, truc, lambda_param, theta)
