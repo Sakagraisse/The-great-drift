@@ -14,17 +14,12 @@ def create_frame_x_graph_2():
     dir_path = os.path.dirname(os.path.abspath(__file__))
     frame_x = np.load(os.path.join(dir_path, 'frame_x.npy'))
 
-    # Division of columns into 75 groups
-    index = np.linspace(0, frame_x.shape[0]-1, 75).astype(int)
-    #print(index)
-    # Create an empty dataframe for frame_x_shorten
-    frame_x_shorten = frame_x[index,:]
     frame_x_bins = np.zeros((75, 10))
     bins = np.arange(0, 1.1, 0.1)
     for i in range(0, 75, 1):
-        hist, bin_edges = np.histogram(frame_x_shorten[i, :], bins)
+        hist, bin_edges = np.histogram(frame_x[i, :], bins)
         frame_x_bins[i, :] = hist
-    #print("lol")
+
     data = frame_x_bins
     #transposing the data
     data = data.T
@@ -54,44 +49,39 @@ def create_graph_pop_type_2():
     frame_a = np.load(os.path.join(dir_path, 'frame_a.npy'))
     frame_d = np.load(os.path.join(dir_path, 'frame_d.npy'))
 
-    # Créer des groupes de 75 colonnes comme dans create_frame_x_graph
-    index = np.linspace(0, frame_a.shape[0]-1, 75).astype(int)
-    frame_a_shorten = frame_a[index,:]
-    frame_d_shorten = frame_d[index,:]
-
     # Créer un tableau de 75 colonnes et 6 lignes
     frame_a_bins = np.zeros((75, 9))  # Increase the size of the array to accommodate the new categories
     for j in range(0, 75, 1):
-        for i in range(0, len(frame_a_shorten[j]), 1):
-            if frame_a_shorten[j, i] == 0 and frame_d_shorten[j, i] == 0:
+        for i in range(0, len(frame_a[j]), 1):
+            if frame_a[j, i] == 0 and frame_d[j, i] == 0:
                 frame_a_bins[j, 0] += 1
-            elif frame_a_shorten[j, i] == 0 and frame_d_shorten[j, i] < 1 and frame_d_shorten[j, i] > 0:
+            elif frame_a[j, i] == 0 and frame_d[j, i] < 1 and frame_d[j, i] > 0:
                 frame_a_bins[j, 1] += 1
-            elif frame_a_shorten[j, i] > 0 and frame_a_shorten[j, i] < 1 \
-                    and frame_d_shorten[j, i] > 0 and frame_d_shorten[j, i] < 1 \
-                    and function_1(frame_a_shorten[j, i], frame_d_shorten[j, i]) <= 0.1:
+            elif frame_a[j, i] > 0 and frame_a[j, i] < 1 \
+                    and frame_d[j, i] > 0 and frame_d[j, i] < 1 \
+                    and function_1(frame_a[j, i], frame_d[j, i]) <= 0.1:
                 frame_a_bins[j, 2] += 1
-            elif frame_a_shorten[j, i] > 0 and frame_a_shorten[j, i] < 1 \
-                    and frame_d_shorten[j, i] > 0 and frame_d_shorten[j, i] < 1 \
-                    and function_1(frame_a_shorten[j, i], frame_d_shorten[j, i]) < 0.9\
-                    and function_1(frame_a_shorten[j, i], frame_d_shorten[j, i]) > 1\
-                    and frame_a_shorten[j, i] <= frame_d_shorten[j, i]:
+            elif frame_a[j, i] > 0 and frame_a[j, i] < 1 \
+                    and frame_d[j, i] > 0 and frame_d[j, i] < 1 \
+                    and function_1(frame_a[j, i], frame_d[j, i]) < 0.9\
+                    and function_1(frame_a[j, i], frame_d[j, i]) > 1\
+                    and frame_a[j, i] <= frame_d[j, i]:
                 frame_a_bins[j, 3] += 1
-            elif frame_a_shorten[j, i] == 0 and frame_d_shorten[j, i] == 1:
+            elif frame_a[j, i] == 0 and frame_d[j, i] == 1:
                 frame_a_bins[j, 4] += 1
-            elif frame_a_shorten[j, i] < 1 and frame_a_shorten[j, i] > 0 \
-                    and frame_d_shorten[j, i] < 1 and frame_d_shorten[j, i] > 0 \
-                    and function_1(frame_a_shorten[j, i], frame_d_shorten[j, i]) >= 0.9 :
+            elif frame_a[j, i] < 1 and frame_a[j, i] > 0 \
+                    and frame_d[j, i] < 1 and frame_d[j, i] > 0 \
+                    and function_1(frame_a[j, i], frame_d[j, i]) >= 0.9 :
                 frame_a_bins[j, 5] += 1
-            elif frame_a_shorten[j, i] > 0 and frame_a_shorten[j, i] < 1  and frame_d_shorten[j, i] == 1:
+            elif frame_a[j, i] > 0 and frame_a[j, i] < 1  and frame_d[j, i] == 1:
                 frame_a_bins[j, 6] += 1
-            elif frame_a_shorten[j, i] == 1 and frame_d_shorten[j, i] == 1:
+            elif frame_a[j, i] == 1 and frame_d[j, i] == 1:
                 frame_a_bins[j, 7] += 1
             else:
                 frame_a_bins[j, 8] += 1
 
 
-    print(frame_a_shorten[50, :])
+
 
 
 

@@ -57,7 +57,7 @@ class ParameterChooser(QWidget):
         self.period_label = QLabel("Period")
         self.period_input = QSpinBox()
         self.period_input.setRange(100, 200000)
-        self.period_input.setValue(150000)  # Set default value
+        self.period_input.setValue(1500)  # Set default value
         self.base_parameters_layout.addWidget(self.period_label, 1, 2)
         self.base_parameters_layout.addWidget(self.period_input, 1, 3)
 
@@ -135,6 +135,20 @@ class ParameterChooser(QWidget):
 
         self.base_parameters_group.setLayout(self.base_parameters_layout)
 
+        #Create a QGroupBox for Average over simulations
+        self.average_group = QGroupBox("Average over simulations")
+        self.average_layout = QVBoxLayout()
+
+        self.number_average_input = QLabel("Step Size")
+        self.number_average_input = QSpinBox()
+        self.number_average_input.setRange(1, 30)
+        self.number_average_input.setValue(1)
+        self.number_average_input.setSingleStep(1)
+        self.average_layout.addWidget(self.number_average_input)
+
+        self.average_group.setLayout(self.average_layout)
+
+
 
         # Create a QGroupBox for Simulation Type
         self.simulation_type_group = QGroupBox("Simulation Type")
@@ -144,8 +158,11 @@ class ParameterChooser(QWidget):
         self.option1_button.setChecked(True)
         self.option1_button.toggled.connect(self.update_theta_lambda)
         self.option2_button = QRadioButton("Group Competition")
+        #hide the option2_button
+        self.option2_button.hide()
         self.option2_button.toggled.connect(self.update_num_interactions)
         self.option3_button = QRadioButton("Joint Scenario")
+        self.option3_button.hide()
 
         self.button_group = QButtonGroup()
         self.button_group.addButton(self.option1_button)
@@ -158,7 +175,6 @@ class ParameterChooser(QWidget):
 
         self.simulation_type_group.setLayout(self.simulation_type_layout)
 
-
         # Create a QHBoxLayout
         self.main_layout = QHBoxLayout()
 
@@ -168,6 +184,7 @@ class ParameterChooser(QWidget):
         # Add the base parameters group and the simulation type group to the left column
         self.left_column_layout.addWidget(self.base_parameters_group)
         self.left_column_layout.addWidget(self.simulation_type_group)
+        self.left_column_layout.addWidget(self.average_group)
 
         # Add the submit button to the left column
         self.submit_button = QPushButton("Submit")
@@ -277,60 +294,61 @@ class ParameterChooser(QWidget):
         print(f"Lambda Param: {lambda_param}")
         print(f"Theta: {theta}")
 
-        os.environ['NUMBA_CACHE_DIR'] = '/tmp/numba_cache/'
 
         frame_a = np.zeros((period, (group_size * number_groups)))
+        frame_x_store = np.zeros((75, (group_size * number_groups)))
+        frame_a_store = np.zeros((75, (group_size * number_groups)))
+        frame_d_store = np.zeros((75, (group_size * number_groups)))
         frame_x = np.zeros((period, (group_size * number_groups)))
         frame_d = np.zeros((period, (group_size * number_groups)))
         frame_t = np.zeros((period, (group_size * number_groups)))
         frame_u = np.zeros((period, (group_size * number_groups)))
         frame_v = np.zeros((period, (group_size * number_groups)))
         frame_fitnessToT = np.zeros((period, (group_size * number_groups)))
+        # create a folder to store the results
 
-        if self.option1_button.isChecked():
-            start = time.time()
-            SF.main_loop_iterated(group_size, number_groups, num_interactions, period, frame_a, frame_x, frame_d, frame_t, \
+        dir_path = os.path.dirname(os.path.abspath(__file__))
+        index_to_store = np.linspace(0, frame_x.shape[0] - 1, 75).astype(int)
+        for i in range(1,(self.number_average_input.value()+1)):
+            if self.option1_button.isChecked():
+                start = time.time()
+                SF.main_loop_iterated(group_size, number_groups, num_interactions, period, frame_a, frame_x, frame_d, frame_t, \
                                frame_u, frame_v, frame_fitnessToT, mu, step_size, \
                                coupled, to_migrate, transfert_multiplier, truc)
-            end = time.time()
-            print("Execution time: ", end - start, "for", period, "iterations.")
-        elif self.option2_button.isChecked():
-            start = time.time()
-            SF.main_loop_group_competition(group_size, number_groups, num_interactions, period, frame_a, frame_x,
-                                           frame_d, frame_t, \
-                                           frame_u, frame_v, frame_fitnessToT, mu, step_size, coupled, to_migrate,
-                                           transfert_multiplier, truc, lambda_param, theta)
-            end = time.time()
-            print("Execution time: ", end - start, "for", period, "iterations.")
-        else:
-            start = time.time()
-            SF.joint_scenario(group_size, number_groups, num_interactions, period, frame_a, frame_x,
-                                           frame_d, frame_t, \
-                                           frame_u, frame_v, frame_fitnessToT, mu, step_size, coupled, to_migrate,
-                                           transfert_multiplier, truc, lambda_param, theta)
-            end = time.time()
-            print("Execution time: ", end - start, "for", period, "iterations.")
+                end = time.time()
+                print("Execution time: ", end - start, "for", period, "iterations.")
+                if i == 1:
+                    frame_x_store = frame_x[index_to_store, :]
+                    frame_a_store = frame_a[index_to_store, :]
+                    frame_d_store = frame_d[index_to_store, :]
+                else:
+                    #happend to the array
+                    frame_x_store = np.hstack((frame_x_store, frame_x[index_to_store, :]))
+                    frame_a_store = np.hstack((frame_a_store, frame_a[index_to_store, :]))
+                    frame_d_store = np.hstack((frame_d_store, frame_d[index_to_store, :]))
+        print(i)
 
-        index = np.linspace(0, frame_x.shape[0] - 1, 75).astype(int)
-        frame_x = frame_x[index, :]
-        frame_a = frame_a[index, :]
-        frame_d = frame_d[index, :]
-        frame_t = frame_t[index, :]
-        frame_u = frame_u[index, :]
-        frame_v = frame_v[index, :]
-        frame_fitnessToT = frame_fitnessToT[index, :]
+
+
+
+
+        #index = np.linspace(0, frame_x.shape[0] - 1, 75).astype(int)
+        #frame_x = frame_x[index, :]
+        #frame_a = frame_a[index, :]
+        #frame_d = frame_d[index, :]
+        #frame_t = frame_t[index, :]
+        #frame_u = frame_u[index, :]
+        #frame_v = frame_v[index, :]
+        #frame_fitnessToT = frame_fitnessToT[index, :]
 
         #find os path compatible windows/linux/mac
-        dir_path = os.path.dirname(os.path.abspath(__file__))
-        np.save(os.path.join(dir_path, 'frame_a.npy'), frame_a)
-        np.save(os.path.join(dir_path, 'frame_x.npy'), frame_x)
-        np.save(os.path.join(dir_path, 'frame_d.npy'), frame_d)
+        #dir_path = os.path.dirname(os.path.abspath(__file__))
+        np.save(os.path.join(dir_path, 'frame_a.npy'), frame_a_store)
+        np.save(os.path.join(dir_path, 'frame_x.npy'), frame_x_store)
+        np.save(os.path.join(dir_path, 'frame_d.npy'), frame_d_store)
 
         print("finished")
 
-        # Specify the path to your Numba cache directory
-        cache_size = self.get_dir_size(os.environ['NUMBA_CACHE_DIR'])
-        print(f"Numba cache directory size: {cache_size} bytes")
 
 
     def graph1(self):
