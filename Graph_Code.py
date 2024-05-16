@@ -9,7 +9,7 @@ import numba as nb
 
 
 #@nb.jit(nopython=True)
-def create_frame_x_graph_2():
+def create_frame_x_graph_2(period):
     # Import frame_x from csv file
     dir_path = os.path.dirname(os.path.abspath(__file__))
     frame_x = np.load(os.path.join(dir_path, 'frame_x.npy'))
@@ -27,7 +27,17 @@ def create_frame_x_graph_2():
     plt.imshow(data, cmap='Greys', aspect='auto')
     plt.colorbar(label='Value')
     plt.xticks(range(data.shape[1]), rotation=90)
-    plt.yticks(range(data.shape[0]), bins[:-1])
+    # Calculate the indices for start, quarter, three quarters and end
+    indices = [0, period // 3, 2 * period // 4, (period - 1)]
+
+    # Select the corresponding periods
+    selected_periods = np.arange(period)
+    selected_periods = selected_periods[indices]
+    # Set the x-ticks at the selected indices
+    plt.xticks(indices, selected_periods)
+    custom_ticks = np.arange(0, 1.1, 0.1)  # replace with your desired ticks
+    custom_ticks = np.round(custom_ticks, 1)  # round to one decimal place
+    plt.yticks(np.linspace(0, data.shape[0] - 1, len(custom_ticks)), custom_ticks)
     plt.gca().invert_yaxis()  # Invert y-axis
     plt.xlabel('Period')
     plt.ylabel('Bins')
@@ -64,7 +74,7 @@ def create_graph_pop_type_2():
             elif frame_a[j, i] > 0 and frame_a[j, i] < 1 \
                     and frame_d[j, i] > 0 and frame_d[j, i] < 1 \
                     and function_1(frame_a[j, i], frame_d[j, i]) < 0.9\
-                    and function_1(frame_a[j, i], frame_d[j, i]) > 1\
+                    and function_1(frame_a[j, i], frame_d[j, i]) > 0.1\
                     and frame_a[j, i] <= frame_d[j, i]:
                 frame_a_bins[j, 3] += 1
             elif frame_a[j, i] == 0 and frame_d[j, i] == 1:

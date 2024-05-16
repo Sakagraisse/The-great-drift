@@ -296,9 +296,6 @@ class ParameterChooser(QWidget):
 
 
         frame_a = np.zeros((period, (group_size * number_groups)))
-        frame_x_store = np.zeros((75, (group_size * number_groups)))
-        frame_a_store = np.zeros((75, (group_size * number_groups)))
-        frame_d_store = np.zeros((75, (group_size * number_groups)))
         frame_x = np.zeros((period, (group_size * number_groups)))
         frame_d = np.zeros((period, (group_size * number_groups)))
         frame_t = np.zeros((period, (group_size * number_groups)))
@@ -317,25 +314,16 @@ class ParameterChooser(QWidget):
                                coupled, to_migrate, transfert_multiplier, truc)
                 end = time.time()
                 print("Execution time: ", end - start, "for", period, "iterations.")
-                if i == 1:
-                    frame_x_store = frame_x[index_to_store, :]
-                    frame_a_store = frame_a[index_to_store, :]
-                    frame_d_store = frame_d[index_to_store, :]
-                else:
-                    #happend to the array
-                    frame_x_store = np.hstack((frame_x_store, frame_x[index_to_store, :]))
-                    frame_a_store = np.hstack((frame_a_store, frame_a[index_to_store, :]))
-                    frame_d_store = np.hstack((frame_d_store, frame_d[index_to_store, :]))
         print(i)
 
 
 
 
 
-        #index = np.linspace(0, frame_x.shape[0] - 1, 75).astype(int)
-        #frame_x = frame_x[index, :]
-        #frame_a = frame_a[index, :]
-        #frame_d = frame_d[index, :]
+        index = np.linspace(0, frame_x.shape[0] - 1, 75).astype(int)
+        frame_x = frame_x[index, :]
+        frame_a = frame_a[index, :]
+        frame_d = frame_d[index, :]
         #frame_t = frame_t[index, :]
         #frame_u = frame_u[index, :]
         #frame_v = frame_v[index, :]
@@ -343,9 +331,14 @@ class ParameterChooser(QWidget):
 
         #find os path compatible windows/linux/mac
         #dir_path = os.path.dirname(os.path.abspath(__file__))
-        np.save(os.path.join(dir_path, 'frame_a.npy'), frame_a_store)
-        np.save(os.path.join(dir_path, 'frame_x.npy'), frame_x_store)
-        np.save(os.path.join(dir_path, 'frame_d.npy'), frame_d_store)
+        #remove the previous files
+        for file in os.listdir(dir_path):
+            if file.endswith(".npy"):
+                os.remove(file)
+
+        np.save(os.path.join(dir_path, 'frame_a.npy'), frame_a)
+        np.save(os.path.join(dir_path, 'frame_x.npy'), frame_x)
+        np.save(os.path.join(dir_path, 'frame_d.npy'), frame_d)
 
         print("finished")
 
@@ -353,7 +346,7 @@ class ParameterChooser(QWidget):
 
     def graph1(self):
         # Generate the graph and save it as an image
-        GC.create_frame_x_graph_2()
+        GC.create_frame_x_graph_2(self.period_input.value())
         # Load the image into the QLabel
         dir_path = os.path.dirname(os.path.abspath(__file__))
         pixmap = QPixmap(os.path.join(dir_path, "frame_x.png"))

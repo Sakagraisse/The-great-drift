@@ -82,7 +82,7 @@ def migration(x_i, d_i, a_i,t_i,u_i,v_i, to_migrate,number_groups, group_size):
         raise ValueError("The number of migrants is greater than the group size")
 
     if to_migrate == 0:
-        return
+        return x_i, d_i, a_i, t_i, u_i, v_i
 
     temp_x_i = np.zeros((number_groups,to_migrate), dtype=np.float64)
     temp_d_i = np.zeros((number_groups,to_migrate), dtype=np.float64)
@@ -151,13 +151,12 @@ def IN_social_dilemma(x_i, d_i, a_i, store_interaction, fitnessIN, number_groups
     for j in range(number_groups):
         indices = np.arange(group_size)
         np.random.shuffle(indices)
-
-        fitnessIN[j,:] = np.zeros(group_size, dtype=np.float64)
-        store_interaction[j,:,:] = np.zeros((group_size,num_interactions), dtype=np.float64)
-
+        x_i[j,:] = x_i[j,indices]
+        d_i[j,:] = d_i[j,indices]
+        a_i[j,:] = a_i[j,indices]
         for i in range(0, group_size, 2):
-            p1 = indices[i]
-            p2 = indices[i+1]
+            p1 = i
+            p2 = i + 1
             store_interaction[j, p1, 0] = x_i[j, p1]
             store_interaction[j, p2, 0] = a_i[j, p2] + (d_i[j, p2] - a_i[j, p2]) * \
                                                store_interaction[j, p1, 0]
@@ -173,11 +172,7 @@ def IN_social_dilemma(x_i, d_i, a_i, store_interaction, fitnessIN, number_groups
                     fitnessIN[j, p1] += 1 - store_interaction[j, p1, k] + store_interaction[j, p2, k] * transfert_multiplier
                     fitnessIN[j, p2] += 1 - store_interaction[j, p2, k] + store_interaction[j, p1, k] * transfert_multiplier
 
-    # suppress from memory
-    indices = np.empty(0)
-
-
-    return
+    return x_i, d_i, a_i, store_interaction, fitnessIN
 
 
 @nb.jit(nopython=True)
@@ -197,10 +192,6 @@ def OUT_social_dilemma(t_i,u_i,v_j,fitnessOUT,group_size, number_groups,transfer
             fitnessOUT[g1,p] = 1 - temp_x + temp_y * transfert_multiplier
             fitnessOUT[g1,p] = 1 - temp_y + temp_x * transfert_multiplier
 
-    # suppress from memory
-    indices_in_group = np.empty(0)
-    temp_x = np.empty(0)
-    temp_y = np.empty(0)
 
     return
 
@@ -212,7 +203,7 @@ def fitnessToT_calculation(fitnessIN, fitnessOUT, fitnessToT, number_groups, gro
     for j in range(number_groups):
         for i in range(group_size):
             fitnessToT[j,i] = (1-truc)*(num_interactions + compi) + truc *(fitnessIN[j,i] + fitnessOUT[j,i])
-    return
+    return fitnessToT
 
 @nb.jit(nopython=True)
 def intergroup_comp(fitnessToT, number_groups, group_size, truc, transfert_multiplier, num_interactions,theta, victory,indices_group,lambda_param,do_compete):
@@ -303,17 +294,28 @@ def replace_group_comp(x_i, d_i, a_i, t_i, u_i, v_i, fitnessToT, indices_group, 
     return
 
 
+
 @nb.jit(nopython=True)
-def reproduction_one_group(v1,v2,v3, fitness, mu, step_size):
+def reproduction_pop(v1,v2,v3, fitnessToT,number_groups, mu, step_size):
+    """
+    Reproduction of the population
+    """
+    for j in range(number_groups):
+        v1[j,:], v2[j,:], v3[j,:] = reproduction_one_group(v1[j,:], v2[j,:], v3[j,:], fitnessToT[j,:], mu, step_size)
+    return v1, v2, v3
+
+
+@nb.jit(nopython=True)
+def reproduction_one_group(v1,v2,v3, fitnessToT, mu, step_size):
     """
     Reproduction of one group of the population
     """
     #for x_i
-    v1 = return_pop_vector_Ui(v1, fitness)
+    v1 = return_pop_vector_Ui(v1, fitnessToT)
     #for d_i
-    v2 = return_pop_vector_Ui(v2, fitness)
+    v2 = return_pop_vector_Ui(v2, fitnessToT)
     #for a_i
-    v3 = return_pop_vector_Ui(v3, fitness)
+    v3 = return_pop_vector_Ui(v3, fitnessToT)
     for i in range(v1.shape[0]):
         v1[i] = mutate(v1[i], mu, step_size)
         v2[i] = mutate(v2[i], mu, step_size)
@@ -443,7 +445,7 @@ def main_loop_iterated(group_size, number_groups, num_interactions, period, fram
             x_i, d_i, a_i, t_i, u_i, v_i = migration(x_i, d_i, a_i, t_i, u_i, v_i, to_migrate, number_groups, group_size)
 
         #Social Dilemma
-        IN_social_dilemma(x_i, d_i, a_i, store_interaction, fitnessIN, number_groups, group_size,\
+        x_i, d_i, a_i, store_interaction, fitnessIN = IN_social_dilemma(x_i, d_i, a_i, store_interaction, fitnessIN, number_groups, group_size,\
                                                                     num_interactions, transfert_multiplier)
 
         #Migration (Decoupled)
@@ -451,13 +453,12 @@ def main_loop_iterated(group_size, number_groups, num_interactions, period, fram
              x_i, d_i, a_i, t_i, u_i, v_i = migration(x_i, d_i, a_i, t_i, u_i, v_i, to_migrate, number_groups, group_size)
 
         #Total fitness Calulation per individual
-        fitnessToT_calculation(fitnessIN, fitnessOUT, fitnessToT, number_groups, group_size, truc, num_interactions)
+        fitnessToT = fitnessToT_calculation(fitnessIN, fitnessOUT, fitnessToT, number_groups, group_size, truc, num_interactions)
 
 
         #Reproduction
-        indices_group = np.arange(number_groups)
-        np.random.shuffle(indices_group)
-        replace_group_comp(x_i, d_i, a_i, t_i, u_i, v_i, fitnessToT, indices_group, victory, do_compete, mu, step_size, number_groups)
+        x_i, d_i, a_i = reproduction_pop(x_i, d_i, a_i, fitnessToT,number_groups, mu, step_size)
+        #d_i = np.ones((number_groups, group_size), dtype=np.float64)
 
 
     return
