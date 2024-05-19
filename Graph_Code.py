@@ -22,26 +22,35 @@ def create_frame_x_graph_2(period):
 
     data = frame_x_bins
     #transposing the data
+    # Transposer les données comme dans votre code
     data = data.T
-    plt.figure(figsize=(12, 8))
-    plt.imshow(data, cmap='Greys', aspect='auto')
-    plt.colorbar(label='Value')
-    plt.xticks(range(data.shape[1]), rotation=90)
-    # Calculate the indices for start, quarter, three quarters and end
-    indices = [0, period // 3, 2 * period // 4, (period - 1)]
 
-    # Select the corresponding periods
+    # Création du graphique
+    plt.figure(figsize=(12, 8))
+    plt.imshow(data, cmap='viridis', aspect='auto')  # Utilisation de 'viridis' pour une meilleure lisibilité
+    plt.colorbar(label='Value')
+
+    # Calcul des indices pour le début, un quart, trois quarts et la fin
+    period = data.shape[1]
+    indices = [0, period // 3, 2 * period // 3, period - 1]
+
+    # Sélection des périodes correspondantes
     selected_periods = np.arange(period)
     selected_periods = selected_periods[indices]
-    # Set the x-ticks at the selected indices
+
+    # Définir les ticks sur l'axe des x aux indices sélectionnés
     plt.xticks(indices, selected_periods)
-    custom_ticks = np.arange(0, 1.1, 0.1)  # replace with your desired ticks
-    custom_ticks = np.round(custom_ticks, 1)  # round to one decimal place
+    custom_ticks = np.arange(0, 1.1, 0.1)  # définir les ticks personnalisés pour l'axe y
+    custom_ticks = np.round(custom_ticks, 1)  # arrondir à une décimale
+
+    # Définir les ticks sur l'axe des y
     plt.yticks(np.linspace(0, data.shape[0] - 1, len(custom_ticks)), custom_ticks)
-    plt.gca().invert_yaxis()  # Invert y-axis
-    plt.xlabel('Period')
-    plt.ylabel('Bins')
-    plt.title('Graph')
+    plt.gca().invert_yaxis()  # Inverser l'axe y pour correspondre au graphique fourni
+
+    # Étiquettes et titre
+    plt.xlabel('Generation')
+    plt.ylabel('Proportion')
+    plt.title('Coupled $m_j=0$')
     #plt.show()
     #save the graph
     dir_path = os.path.dirname(os.path.abspath(__file__))

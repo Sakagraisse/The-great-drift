@@ -458,7 +458,8 @@ def main_loop_iterated(group_size, number_groups, num_interactions, period, fram
 
         #Reproduction
         x_i, d_i, a_i = reproduction_pop(x_i, d_i, a_i, fitnessToT,number_groups, mu, step_size)
-        #d_i = np.ones((number_groups, group_size), dtype=np.float64)
+        #if i < 10000:
+            #a_i = np.ones((number_groups, group_size), dtype=np.float64)
 
 
     return

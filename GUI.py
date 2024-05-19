@@ -34,8 +34,9 @@ class ParameterChooser(QWidget):
 
         self.group_size_label = QLabel("Group Size")
         self.group_size_input = QSpinBox()
-        self.group_size_input.setRange(1, 100)
+        self.group_size_input.setRange(1, 240)
         self.group_size_input.setValue(24)  # Set default value
+        self.group_size_input.setSingleStep(12)
         self.base_parameters_layout.addWidget(self.group_size_label, 0, 0)
         self.base_parameters_layout.addWidget(self.group_size_input, 0, 1)
 
@@ -303,9 +304,9 @@ class ParameterChooser(QWidget):
         frame_v = np.zeros((period, (group_size * number_groups)))
         frame_fitnessToT = np.zeros((period, (group_size * number_groups)))
         # create a folder to store the results
+        index = np.linspace(0, frame_x.shape[0] - 1, 75).astype(int)
 
         dir_path = os.path.dirname(os.path.abspath(__file__))
-        index_to_store = np.linspace(0, frame_x.shape[0] - 1, 75).astype(int)
         for i in range(1,(self.number_average_input.value()+1)):
             if self.option1_button.isChecked():
                 start = time.time()
@@ -314,16 +315,20 @@ class ParameterChooser(QWidget):
                                coupled, to_migrate, transfert_multiplier, truc)
                 end = time.time()
                 print("Execution time: ", end - start, "for", period, "iterations.")
+
+            if i ==1:
+                frame_x_store = frame_x[index, :]
+                frame_a_store = frame_a[index, :]
+                frame_d_store = frame_d[index, :]
+            if i > 1:
+                frame_x_store = np.hstack((frame_x_store, frame_x[index, :]))
+                frame_a_store = np.hstack((frame_a_store, frame_a[index, :]))
+                frame_d_store = np.hstack((frame_d_store, frame_d[index, :]))
+
+
         print(i)
 
-
-
-
-
-        index = np.linspace(0, frame_x.shape[0] - 1, 75).astype(int)
-        frame_x = frame_x[index, :]
-        frame_a = frame_a[index, :]
-        frame_d = frame_d[index, :]
+        print(frame_x_store.shape)
         #frame_t = frame_t[index, :]
         #frame_u = frame_u[index, :]
         #frame_v = frame_v[index, :]
@@ -336,9 +341,9 @@ class ParameterChooser(QWidget):
             if file.endswith(".npy"):
                 os.remove(file)
 
-        np.save(os.path.join(dir_path, 'frame_a.npy'), frame_a)
-        np.save(os.path.join(dir_path, 'frame_x.npy'), frame_x)
-        np.save(os.path.join(dir_path, 'frame_d.npy'), frame_d)
+        np.save(os.path.join(dir_path, 'frame_a.npy'), frame_a_store)
+        np.save(os.path.join(dir_path, 'frame_x.npy'), frame_x_store)
+        np.save(os.path.join(dir_path, 'frame_d.npy'), frame_d_store)
 
         print("finished")
 
