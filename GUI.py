@@ -6,7 +6,7 @@ import Graph_Code as GC
 import time
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QSpinBox, QLabel, \
     QDoubleSpinBox, QCheckBox, QRadioButton, QButtonGroup, QGroupBox,QGridLayout, QHBoxLayout, \
-    QSizePolicy, QTextEdit
+    QSizePolicy, QTextEdit, QFileDialog
 
 from PyQt6.QtGui import QPixmap, QColor
 from PyQt6.QtCore import Qt, QSize, QProcess
@@ -58,13 +58,14 @@ class ParameterChooser(QWidget):
         self.period_label = QLabel("Period")
         self.period_input = QSpinBox()
         self.period_input.setRange(100, 200000)
-        self.period_input.setValue(1500)  # Set default value
+        self.period_input.setValue(50000)  # Set default value
+        self.period_input.setSingleStep(10000)
         self.base_parameters_layout.addWidget(self.period_label, 1, 2)
         self.base_parameters_layout.addWidget(self.period_input, 1, 3)
 
         self.to_migrate_label = QLabel("To Migrate")
         self.to_migrate_input = QSpinBox()
-        self.to_migrate_input.setRange(0, 16)
+        self.to_migrate_input.setRange(0, 240)
         self.to_migrate_input.setValue(8)  # Set default value
         self.base_parameters_layout.addWidget(self.to_migrate_label, 2, 0)
         self.base_parameters_layout.addWidget(self.to_migrate_input, 2, 1)
@@ -97,7 +98,7 @@ class ParameterChooser(QWidget):
         self.transfert_multiplier_label = QLabel("Transfert Multiplier")
         self.transfert_multiplier_input = QDoubleSpinBox()
         self.transfert_multiplier_input.setRange(0, 100)
-        self.transfert_multiplier_input.setSingleStep(1)
+        self.transfert_multiplier_input.setSingleStep(0.1)
         self.transfert_multiplier_input.setValue(2)  # Set default value
         self.base_parameters_layout.addWidget(self.transfert_multiplier_label, 5, 0)
         self.base_parameters_layout.addWidget(self.transfert_multiplier_input, 5, 1)
@@ -212,6 +213,14 @@ class ParameterChooser(QWidget):
         self.graph2_button.clicked.connect(self.graph2)
         self.button_layout.addWidget(self.graph2_button)
 
+        self.save_plot1_button = QPushButton("Save Plot 1")
+        self.save_plot1_button.clicked.connect(self.save_plot1)
+        self.button_layout.addWidget(self.save_plot1_button)
+
+        self.save_plot2_button = QPushButton("Save Plot 2")
+        self.save_plot2_button.clicked.connect(self.save_plot2)
+        self.button_layout.addWidget(self.save_plot2_button)
+
         # Create a QGroupBox for the buttons
         self.graph_type_group = QGroupBox("Type of Graph")
         self.graph_type_group.setLayout(self.button_layout)
@@ -240,6 +249,32 @@ class ParameterChooser(QWidget):
 
 
         #self.setLayout(self.layout)
+
+    def save_plot1(self):
+        # Open a QFileDialog to choose the save location
+        save_path, _ = QFileDialog.getSaveFileName(self, "Save Plot 1", "", "PNG Files (*.png);;All Files (*)")
+
+        # If a save location was chosen (i.e., the user didn't cancel the dialog)
+        if save_path:
+            # Save the current plot to the chosen location
+            GC.create_frame_x_graph_2(self.period_input.value())
+            pixmap = QPixmap(os.path.join(os.path.dirname(os.path.abspath(__file__)), "frame_x.png"))
+            pixmap.save(save_path)
+
+            print(f"Plot 1 saved to {save_path}")
+
+    def save_plot2(self):
+        # Open a QFileDialog to choose the save location
+        save_path, _ = QFileDialog.getSaveFileName(self, "Save Plot 2", "", "PNG Files (*.png);;All Files (*)")
+
+        # If a save location was chosen (i.e., the user didn't cancel the dialog)
+        if save_path:
+            # Save the current plot to the chosen location
+            GC.create_graph_pop_type_2()
+            pixmap = QPixmap(os.path.join(os.path.dirname(os.path.abspath(__file__)), "frame_a.png"))
+            pixmap.save(save_path)
+
+            print(f"Plot 2 saved to {save_path}")
 
 
     def update_theta_lambda(self, checked):

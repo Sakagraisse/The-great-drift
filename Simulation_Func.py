@@ -18,7 +18,7 @@ def create_initial_pop(group_size, number_groups, num_interactions):
     Creates the initial population of players.
     """
     x_i = np.ones((number_groups, group_size), dtype=np.float64)
-    d_i = np.ones((number_groups, group_size), dtype=np.float64)
+    d_i = np.zeros((number_groups, group_size), dtype=np.float64)
     a_i = np.zeros((number_groups, group_size), dtype=np.float64)
     t_i = np.ones((number_groups, group_size), dtype=np.float64)
     u_i = np.zeros((number_groups, group_size), dtype=np.float64)
@@ -68,7 +68,7 @@ def meta_pop(number_groups, frame_x, frame_a, frame_d):
     frame_x = frame_x[indices, :]
     frame_a = frame_a[indices, :]
     frame_d = frame_d[indices, :]
-    return
+    return frame_x, frame_a, frame_d
 
 
 
@@ -435,7 +435,7 @@ def main_loop_iterated(group_size, number_groups, num_interactions, period, fram
 
 
         #Movement in metapopulation
-        meta_pop(number_groups, frame_x, frame_a, frame_d)
+        #frame_x, frame_a, frame_d = meta_pop(number_groups, frame_x, frame_a, frame_d)
 
 
 
