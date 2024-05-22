@@ -26,9 +26,9 @@ class ParameterChooser(QWidget):
     def __init__(self):
         super().__init__()
 
+        self.setWindowTitle("Parameter Chooser")
+        self.setGeometry(100, 100, 800, 600)
 
-
-        # Create a QGroupBox
         self.base_parameters_group = QGroupBox("Base Parameters")
         self.base_parameters_layout = QGridLayout()
 
@@ -103,23 +103,6 @@ class ParameterChooser(QWidget):
         self.base_parameters_layout.addWidget(self.transfert_multiplier_label, 5, 0)
         self.base_parameters_layout.addWidget(self.transfert_multiplier_input, 5, 1)
 
-        self.lambda_param_label = QLabel("Lambda Param")
-        self.lambda_param_input = QDoubleSpinBox()
-        self.lambda_param_input.setEnabled(False)
-        self.lambda_param_input.setRange(0, 100)
-        self.lambda_param_input.setSingleStep(1)
-        self.lambda_param_input.setValue(10)  # Set default value
-        self.base_parameters_layout.addWidget(self.lambda_param_label, 4, 2)
-        self.base_parameters_layout.addWidget(self.lambda_param_input, 4, 3)
-
-        self.theta_label = QLabel("Theta")
-        self.theta_input = QDoubleSpinBox()
-        self.theta_input.setEnabled(False)
-        self.theta_input.setRange(0.01, 1.00)
-        self.theta_input.setSingleStep(0.01)
-        self.theta_input.setValue(0.5)  # Set default value
-        self.base_parameters_layout.addWidget(self.theta_label, 4, 0)
-        self.base_parameters_layout.addWidget(self.theta_input, 4, 1)
 
         # Create radio buttons for "Coupled" and "Uncoupled"
         self.coupled_button = QRadioButton("Coupled")
@@ -150,33 +133,6 @@ class ParameterChooser(QWidget):
 
         self.average_group.setLayout(self.average_layout)
 
-
-
-        # Create a QGroupBox for Simulation Type
-        self.simulation_type_group = QGroupBox("Simulation Type")
-        self.simulation_type_layout = QVBoxLayout()
-
-        self.option1_button = QRadioButton("Repeated Interactions")
-        self.option1_button.setChecked(True)
-        self.option1_button.toggled.connect(self.update_theta_lambda)
-        self.option2_button = QRadioButton("Group Competition")
-        #hide the option2_button
-        self.option2_button.hide()
-        self.option2_button.toggled.connect(self.update_num_interactions)
-        self.option3_button = QRadioButton("Joint Scenario")
-        self.option3_button.hide()
-
-        self.button_group = QButtonGroup()
-        self.button_group.addButton(self.option1_button)
-        self.button_group.addButton(self.option2_button)
-        self.button_group.addButton(self.option3_button)
-
-        self.simulation_type_layout.addWidget(self.option1_button)
-        self.simulation_type_layout.addWidget(self.option2_button)
-        self.simulation_type_layout.addWidget(self.option3_button)
-
-        self.simulation_type_group.setLayout(self.simulation_type_layout)
-
         # Create a QHBoxLayout
         self.main_layout = QHBoxLayout()
 
@@ -185,7 +141,6 @@ class ParameterChooser(QWidget):
 
         # Add the base parameters group and the simulation type group to the left column
         self.left_column_layout.addWidget(self.base_parameters_group)
-        self.left_column_layout.addWidget(self.simulation_type_group)
         self.left_column_layout.addWidget(self.average_group)
 
         # Add the submit button to the left column
@@ -314,8 +269,7 @@ class ParameterChooser(QWidget):
         truc = self.truc_input.value()
         coupled = self.coupled_button.isChecked()
         transfert_multiplier = self.transfert_multiplier_input.value()
-        lambda_param = self.lambda_param_input.value()
-        theta = self.theta_input.value()
+        to_average = self.number_average_input.value()
 
         print(f"Group Size: {group_size}")
         print(f"Number of Groups: {number_groups}")
@@ -327,60 +281,9 @@ class ParameterChooser(QWidget):
         print(f"Truc: {truc}")
         print(f"Coupled: {coupled}")
         print(f"Transfert Multiplier: {transfert_multiplier}")
-        print(f"Lambda Param: {lambda_param}")
-        print(f"Theta: {theta}")
 
-
-        frame_a = np.zeros((period, (group_size * number_groups)))
-        frame_x = np.zeros((period, (group_size * number_groups)))
-        frame_d = np.zeros((period, (group_size * number_groups)))
-        frame_t = np.zeros((period, (group_size * number_groups)))
-        frame_u = np.zeros((period, (group_size * number_groups)))
-        frame_v = np.zeros((period, (group_size * number_groups)))
-        frame_fitnessToT = np.zeros((period, (group_size * number_groups)))
-        # create a folder to store the results
-        index = np.linspace(0, frame_x.shape[0] - 1, 75).astype(int)
-
-        dir_path = os.path.dirname(os.path.abspath(__file__))
-        for i in range(1,(self.number_average_input.value()+1)):
-            if self.option1_button.isChecked():
-                start = time.time()
-                SF.main_loop_iterated(group_size, number_groups, num_interactions, period, frame_a, frame_x, frame_d, frame_t, \
-                               frame_u, frame_v, frame_fitnessToT, mu, step_size, \
-                               coupled, to_migrate, transfert_multiplier, truc)
-                end = time.time()
-                print("Execution time: ", end - start, "for", period, "iterations.")
-
-            if i ==1:
-                frame_x_store = frame_x[index, :]
-                frame_a_store = frame_a[index, :]
-                frame_d_store = frame_d[index, :]
-            if i > 1:
-                frame_x_store = np.hstack((frame_x_store, frame_x[index, :]))
-                frame_a_store = np.hstack((frame_a_store, frame_a[index, :]))
-                frame_d_store = np.hstack((frame_d_store, frame_d[index, :]))
-
-
-        print(i)
-
-        print(frame_x_store.shape)
-        #frame_t = frame_t[index, :]
-        #frame_u = frame_u[index, :]
-        #frame_v = frame_v[index, :]
-        #frame_fitnessToT = frame_fitnessToT[index, :]
-
-        #find os path compatible windows/linux/mac
-        #dir_path = os.path.dirname(os.path.abspath(__file__))
-        #remove the previous files
-        for file in os.listdir(dir_path):
-            if file.endswith(".npy"):
-                os.remove(file)
-
-        np.save(os.path.join(dir_path, 'frame_a.npy'), frame_a_store)
-        np.save(os.path.join(dir_path, 'frame_x.npy'), frame_x_store)
-        np.save(os.path.join(dir_path, 'frame_d.npy'), frame_d_store)
-
-        print("finished")
+        SF.launch_sim_iterated(group_size, number_groups, num_interactions, period, mu, step_size, \
+                            coupled, to_migrate, transfert_multiplier, truc, to_average)
 
 
 
