@@ -15,6 +15,8 @@ from PyQt6.QtCore import Qt, QSize, QProcess,QThread,pyqtSignal, QTimer
 
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib import pyplot as plt
+from matplotlib.figure import Figure
+
 
 
 class SimulationThread(QThread):
@@ -234,6 +236,7 @@ class ParameterChooser(QWidget):
         self.graph_grid_layout.addWidget(self.graph2_button, 1, 0)
 
         self.graph3_button = QPushButton("Graph 3")
+        self.graph3_button.clicked.connect(self.draw_graph_3)
         self.graph_grid_layout.addWidget(self.graph3_button, 0, 1)
 
         self.save_all_button = QPushButton("Save All")
@@ -332,31 +335,88 @@ class ParameterChooser(QWidget):
 
         # Create
 
+    def replace_canvas(self):
+        # Remove the old canvas from the layout
+        self.graph_layout.removeWidget(self.canvas)
+
+        # Create a new canvas with the new figure
+        self.canvas = FigureCanvas()
+
+        # Add the new canvas to the layout
+        self.graph_layout.addWidget(self.canvas)
+
     def draw_graph_1(self):
-        # use create_graph_1 from Graph_Code.py to create the graph and display it in the canevas
-        fig = GC.create_graph_1(self.period_input.value())
+        # Get the size of the canvas in pixels
+        self.replace_canvas()
+        canvas_size = self.canvas.size()
+
+        # Convert the size to inches
+        canvas_size_inches = canvas_size.width() / self.canvas.figure.dpi, canvas_size.height() / self.canvas.figure.dpi
+
+        # Use create_graph_1 from Graph_Code.py to create the graph with the size of the canvas
+        self.fig1 = GC.create_graph_1(self.period_input.value(), figsize=canvas_size_inches)
 
         # Clear the existing figure on the canvas
         self.canvas.figure.clear()
+        self.canvas.figure.gca().cla()
+        self.canvas.flush_events()
+        self.canvas.draw()
 
         # Add the new figure to the canvas
-        self.canvas.figure = fig
+        self.canvas.figure = self.fig1
 
         # Draw the canvas
         self.canvas.draw()
+        #self.canvas.update()
+        #self.canvas.parent().adjustSize()
 
     def draw_graph_2(self):
-        # use create_graph_2 from Graph_Code.py to create the graph and display it in the canevas
-        fig = GC.create_graph_2(self.period_input.value())
+        # Get the size of the canvas in pixels
+        canvas_size = self.canvas.size()
+
+        # Convert the size to inches
+        canvas_size_inches = canvas_size.width() / self.canvas.figure.dpi, canvas_size.height() / self.canvas.figure.dpi
+
+        # Use create_graph_2 from Graph_Code.py to create the graph with the size of the canvas
+        self.fig2 = GC.create_graph_2(self.period_input.value(), figsize=canvas_size_inches)
 
         # Clear the existing figure on the canvas
         self.canvas.figure.clear()
+        self.canvas.figure.gca().cla()
+        self.canvas.flush_events()
+        self.canvas.draw()
 
         # Add the new figure to the canvas
-        self.canvas.figure = fig
+        self.canvas.figure = self.fig2
 
         # Draw the canvas
         self.canvas.draw()
+        #self.canvas.update()
+        #self.canvas.parent().adjustSize()
+
+    def draw_graph_3(self):
+        # Get the size of the canvas in pixels
+        canvas_size = self.canvas.size()
+
+        # Convert the size to inches
+        canvas_size_inches = canvas_size.width() / self.canvas.figure.dpi, canvas_size.height() / self.canvas.figure.dpi
+
+        # Use create_graph_3 from Graph_Code.py to create the graph with the size of the canvas
+        self.fig3 = GC.create_graph_3(self.period_input.value(), figsize=canvas_size_inches)
+
+        # Clear the existing figure on the canvas
+        self.canvas.figure.clear()
+        self.canvas.flush_events()
+        self.canvas.figure.gca().cla()
+        self.canvas.draw()
+
+        # Add the new figure to the canvas
+        self.canvas.figure = self.fig3
+
+        # Draw the canvas
+        self.canvas.draw()
+        #self.canvas.update()
+        #self.canvas.parent().adjustSize()
 
     def submit(self):
         group_size = self.group_size_input.value()

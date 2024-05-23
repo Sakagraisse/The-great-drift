@@ -14,16 +14,14 @@ def create_frames(period, group_size, number_groups):
     frame_a = np.zeros((period, (group_size * number_groups)))
     frame_x = np.zeros((period, (group_size * number_groups)))
     frame_d = np.zeros((period, (group_size * number_groups)))
-    frame_t = np.zeros((period, (group_size * number_groups)))
-    frame_u = np.zeros((period, (group_size * number_groups)))
-    frame_v = np.zeros((period, (group_size * number_groups)))
+    frame_surplus = np.zeros((period, (group_size * number_groups)))
     frame_fitnessToT = np.zeros((period, (group_size * number_groups)))
 
     # Initialize the index array
     index = np.round(np.linspace(0, frame_x.shape[0]-1, 75)).astype(np.int64)
-    print(index)
 
-    return frame_a, frame_x, frame_d, frame_t, frame_u, frame_v, frame_fitnessToT, index
+
+    return frame_a, frame_x, frame_d,frame_fitnessToT, frame_surplus,index
 
 
 @nb.jit(nopython=True)
@@ -57,35 +55,30 @@ def create_initial_pop(group_size, number_groups, num_interactions,transfert_mul
     else:
         raise ValueError("The choice must be 0, 1 or 2")
 
-    t_i = np.zeros((number_groups, group_size), dtype=np.float64)
-    u_i = np.zeros((number_groups, group_size), dtype=np.float64)
-    v_j = np.ones((number_groups, group_size), dtype=np.float64)
-
     store_interaction = np.zeros((number_groups, group_size,num_interactions), dtype=np.float64)
+    surplus = np.zeros((number_groups, group_size), dtype=np.float64)
     fitnessIN = np.zeros((number_groups, group_size), dtype=np.float64)
     fitnessOUT = np.zeros((number_groups, group_size), dtype=np.float64)
     fitnessToT = np.zeros((number_groups, group_size), dtype=np.float64)
 
-    return x_i, d_i, a_i, t_i, u_i, v_j, store_interaction, fitnessIN, fitnessOUT, fitnessToT
+    return x_i, d_i, a_i, store_interaction, fitnessIN, fitnessOUT, fitnessToT,surplus
 
 
 @nb.jit(nopython=True)
-def store_data(x_i, d_i, a_i, t_i, u_i , v_i,fitnessToT , frame_a, frame_x, frame_d, frame_t, frame_u, frame_v, frame_fitnessToT, period):
+def store_data(x_i, d_i, a_i,fitnessToT ,surplus, frame_a, frame_x, frame_d, frame_fitnessToT, frame_surplus,period):
     """
     Store the data in numpy arrays for a given period.
 
-    Parameters: x_i, d_i, a_i, t_i, u_i, v_i, fitnessToT, frame_a, frame_x, frame_d, frame_t, frame_u, frame_v, frame_fitnessToT, period
+    Parameters: x_i, d_i, a_i, fitnessToT, frame_a, frame_x, frame_d,frame_fitnessToT, period
 
     Returns: frame_a, frame_x, frame_d, frame_t, frame_u, frame_v, frame_fitnessToT
     """
     frame_a[period, :] = a_i.flatten()
     frame_x[period, :] = x_i.flatten()
     frame_d[period, :] = d_i.flatten()
-    frame_t[period, :] = t_i.flatten()
-    frame_u[period, :] = u_i.flatten()
-    frame_v[period, :] = v_i.flatten()
     frame_fitnessToT[period, :] = fitnessToT.flatten()
-    return frame_a, frame_x, frame_d, frame_t, frame_u, frame_v, frame_fitnessToT
+    frame_surplus[period, :] = surplus.flatten()
+    return frame_a, frame_x, frame_d, frame_fitnessToT,frame_surplus
 
 @nb.jit(nopython=True)
 def setdiff1d_numba(arr1, arr2):
@@ -127,7 +120,7 @@ def meta_pop(number_groups, frame_x, frame_a, frame_d):
 
 
 @nb.jit(nopython=True)
-def migration(x_i, d_i, a_i,t_i,u_i,v_i, to_migrate,number_groups, group_size):
+def migration(x_i, d_i, a_i, to_migrate,number_groups, group_size):
     """
     Create the migration of pop groups
     """
@@ -135,14 +128,12 @@ def migration(x_i, d_i, a_i,t_i,u_i,v_i, to_migrate,number_groups, group_size):
         raise ValueError("The number of migrants is greater than the group size")
 
     if to_migrate == 0:
-        return x_i, d_i, a_i, t_i, u_i, v_i
+        return x_i, d_i, a_i
 
     temp_x_i = np.zeros((number_groups,to_migrate), dtype=np.float64)
     temp_d_i = np.zeros((number_groups,to_migrate), dtype=np.float64)
     temp_a_i = np.zeros((number_groups,to_migrate), dtype=np.float64)
-    temp_t_i = np.zeros((number_groups,to_migrate), dtype=np.float64)
-    temp_u_i = np.zeros((number_groups,to_migrate), dtype=np.float64)
-    temp_v_i = np.zeros((number_groups,to_migrate), dtype=np.float64)
+
 
     # extract from the pop the migrants
     for i in range(number_groups):
@@ -151,28 +142,18 @@ def migration(x_i, d_i, a_i,t_i,u_i,v_i, to_migrate,number_groups, group_size):
         x_i[i,:] = x_i[i,indices]
         d_i[i,:] = d_i[i,indices]
         a_i[i,:] = a_i[i,indices]
-        t_i[i,:] = t_i[i,indices]
-        u_i[i,:] = u_i[i,indices]
-        v_i[i,:] = v_i[i,indices]
         temp_x_i[i,:] = x_i[i,0:to_migrate]
         x_i[i,0:to_migrate] = np.zeros(to_migrate, dtype=np.float64)
         temp_d_i[i,:] = d_i[i,0:to_migrate]
         d_i[i,0:to_migrate] = np.zeros(to_migrate, dtype=np.float64)
         temp_a_i[i,:] = a_i[i,0:to_migrate]
         a_i[i,0:to_migrate] = np.zeros(to_migrate, dtype=np.float64)
-        temp_t_i[i,:] = t_i[i,0:to_migrate]
-        t_i[i,0:to_migrate] = np.zeros(to_migrate, dtype=np.float64)
-        temp_u_i[i,:] = u_i[i,0:to_migrate]
-        u_i[i,0:to_migrate] = np.zeros(to_migrate, dtype=np.float64)
-        temp_v_i[i,:] = v_i[i,0:to_migrate]
-        v_i[i,0:to_migrate] = np.zeros(to_migrate, dtype=np.float64)
+
 
     temp_x_i = temp_x_i.ravel()
     temp_d_i = temp_d_i.ravel()
     temp_a_i = temp_a_i.ravel()
-    temp_t_i = temp_t_i.ravel()
-    temp_u_i = temp_u_i.ravel()
-    temp_v_i = temp_v_i.ravel()
+
 
     indices2 = np.arange((to_migrate * number_groups))
     np.random.shuffle(indices2)
@@ -180,24 +161,20 @@ def migration(x_i, d_i, a_i,t_i,u_i,v_i, to_migrate,number_groups, group_size):
     temp_x_i[:] = temp_x_i[indices2]
     temp_d_i[:] = temp_d_i[indices2]
     temp_a_i[:] = temp_a_i[indices2]
-    temp_t_i[:] = temp_t_i[indices2]
-    temp_u_i[:] = temp_u_i[indices2]
-    temp_v_i[:] = temp_v_i[indices2]
+
 
     for j in range(number_groups):
         x_i[j,0:to_migrate] = temp_x_i[j*to_migrate:(j+1)*to_migrate]
         d_i[j,0:to_migrate] = temp_d_i[j*to_migrate:(j+1)*to_migrate]
         a_i[j,0:to_migrate] = temp_a_i[j*to_migrate:(j+1)*to_migrate]
-        t_i[j,0:to_migrate] = temp_t_i[j*to_migrate:(j+1)*to_migrate]
-        u_i[j,0:to_migrate] = temp_u_i[j*to_migrate:(j+1)*to_migrate]
-        v_i[j,0:to_migrate] = temp_v_i[j*to_migrate:(j+1)*to_migrate]
-    return x_i, d_i, a_i, t_i, u_i, v_i
+
+    return x_i, d_i, a_i
 
 
 
 
 @nb.jit(nopython=True)
-def IN_social_dilemma(x_i, d_i, a_i, store_interaction, fitnessIN, number_groups, group_size, num_interactions, transfert_multiplier):
+def IN_social_dilemma(x_i, d_i, a_i, store_interaction, fitnessIN, number_groups, group_size, num_interactions, transfert_multiplier,surplus):
     """
     Create the social dilemma
     """
@@ -225,7 +202,14 @@ def IN_social_dilemma(x_i, d_i, a_i, store_interaction, fitnessIN, number_groups
                     fitnessIN[j, p1] += 1 - store_interaction[j, p1, k] + store_interaction[j, p2, k] * transfert_multiplier
                     fitnessIN[j, p2] += 1 - store_interaction[j, p2, k] + store_interaction[j, p1, k] * transfert_multiplier
 
-    return x_i, d_i, a_i, store_interaction, fitnessIN
+            #surplus
+            surplus[j, p1] = (np.sum(store_interaction[j, p1, :])*transfert_multiplier)/ num_interactions
+            surplus[j, p2] = (np.sum(store_interaction[j, p2, :])*transfert_multiplier)/ num_interactions
+
+
+
+
+    return x_i, d_i, a_i, store_interaction, fitnessIN,surplus
 
 
 @nb.jit(nopython=True)
@@ -335,31 +319,30 @@ def costum_shuffle_pop(x_i,a_i,d_i,fitness):
 
 
 #@nb.jit(nopython=True)
-def main_loop_iterated(x_i, d_i, a_i, t_i, u_i, v_i, fitnessIN, fitnessOUT, fitnessToT,store_interaction, \
-                       frame_a, frame_x, frame_d, frame_t,frame_u, frame_v, frame_fitnessToT,\
+def main_loop_iterated(x_i, d_i, a_i, fitnessIN, fitnessOUT, fitnessToT,store_interaction, surplus,\
+                       frame_a, frame_x, frame_d,frame_fitnessToT,frame_surplus,\
                         group_size, number_groups, num_interactions, period,mu, step_size,coupled, to_migrate, transfert_multiplier, truc, tracking):
 
     compi=0
     for i in range(0, period, 1):
-        #print("Progress:", round((i / period) * 100), "%")
         # store the data
-        frame_a, frame_x, frame_d, frame_t, frame_u, frame_v, frame_fitnessToT = store_data(x_i, d_i, a_i, t_i, u_i, v_i, fitnessToT, frame_a, frame_x, frame_d, frame_t, frame_u, frame_v, \
-                   frame_fitnessToT, i)
+        frame_a, frame_x, frame_d, frame_fitnessToT,frame_surplus = store_data(x_i, d_i, a_i, fitnessToT,surplus, frame_a, frame_x, frame_d, \
+                   frame_fitnessToT, frame_surplus,i)
 
         #Migration(Coupled)
         if coupled:
-            x_i, d_i, a_i, t_i, u_i, v_i = migration(x_i, d_i, a_i, t_i, u_i, v_i, to_migrate, number_groups, group_size)
+            x_i, d_i, a_i = migration(x_i, d_i, a_i, to_migrate, number_groups, group_size)
 
         #Social Dilemma
-        x_i, d_i, a_i, store_interaction, fitnessIN = IN_social_dilemma(x_i, d_i, a_i, store_interaction, fitnessIN, number_groups, group_size,\
-                                                                    num_interactions, transfert_multiplier)
+        x_i, d_i, a_i, store_interaction, fitnessIN,surplus = IN_social_dilemma(x_i, d_i, a_i, store_interaction, fitnessIN, number_groups, group_size,\
+                                                                    num_interactions, transfert_multiplier,surplus)
 
         fitnessToT = fitnessToT_calculation(fitnessIN, fitnessOUT, fitnessToT, number_groups, group_size, truc, num_interactions,
                                compi)
 
         #Migration (Decoupled)
         if not coupled:
-             x_i, d_i, a_i, t_i, u_i, v_i = migration(x_i, d_i, a_i, t_i, u_i, v_i, to_migrate, number_groups, group_size)
+             x_i, d_i, a_i= migration(x_i, d_i, a_i, to_migrate, number_groups, group_size)
 
         #Reproduction
         x_i, d_i, a_i = reproduction_pop(x_i, d_i, a_i, fitnessToT,number_groups, mu, step_size)
@@ -375,30 +358,28 @@ def loop_iterated(group_size, number_groups, num_interactions, period,mu, step_s
 
 
     for i in range(1, (to_average + 1), 1):
-        frame_a, frame_x, frame_d, frame_t, frame_u, frame_v, frame_fitnessToT, index = create_frames(period,
-                                                                                                      group_size,
-                                                                                                      number_groups)
+        frame_a, frame_x, frame_d, frame_fitnessToT,frame_surplus, index = create_frames(period,group_size,number_groups)
 
-        x_i, d_i, a_i, t_i, u_i, v_i, store_interaction, fitnessIN, fitnessOUT, fitnessToT \
+        x_i, d_i, a_i, store_interaction, fitnessIN, fitnessOUT, fitnessToT,surplus \
             = create_initial_pop(group_size, number_groups, num_interactions, transfert_multiplier, x_i_value, choice)
 
-        frame_a, frame_x, frame_d = main_loop_iterated(x_i, d_i, a_i, t_i, u_i, v_i, fitnessIN, fitnessOUT, fitnessToT, store_interaction, \
-                           frame_a, frame_x, frame_d, frame_t, frame_u, frame_v, frame_fitnessToT, \
-                           group_size, number_groups, num_interactions, period, mu, step_size, coupled, to_migrate,\
-                           transfert_multiplier, truc,tracking)
+        frame_a, frame_x, frame_d = main_loop_iterated(x_i, d_i, a_i, fitnessIN, fitnessOUT, fitnessToT, store_interaction,surplus, \
+                           frame_a, frame_x, frame_d, frame_fitnessToT,frame_surplus,\
+                           group_size, number_groups, num_interactions, period, mu, step_size, coupled, to_migrate,transfert_multiplier, truc,tracking)
 
         if i == 1:
             frame_x_store = frame_x[index, :]
             frame_a_store = frame_a[index, :]
             frame_d_store = frame_d[index, :]
+            frame_surplus_store = frame_surplus[index, :]
         if i > 1:
             frame_x_store = np.hstack((frame_x_store, frame_x[index, :]))
             frame_a_store = np.hstack((frame_a_store, frame_a[index, :]))
             frame_d_store = np.hstack((frame_d_store, frame_d[index, :]))
-            print(frame_a_store.shape, frame_x_store.shape, frame_d_store.shape)
+            frame_surplus_store = np.hstack((frame_surplus_store, frame_surplus[index, :]))
         tracking[1]= i/ to_average
 
-    return frame_x_store, frame_a_store, frame_d_store
+    return frame_x_store, frame_a_store, frame_d_store, frame_surplus_store
 
 
 def launch_sim_iterated(group_size, number_groups, num_interactions, period, mu, step_size, \
@@ -407,7 +388,7 @@ def launch_sim_iterated(group_size, number_groups, num_interactions, period, mu,
 
     dir_path = os.path.dirname(os.path.abspath(__file__))
 
-    frame_x_store, frame_a_store, frame_d_store = loop_iterated(\
+    frame_x_store, frame_a_store, frame_d_store, frame_surplus_store = loop_iterated(\
                     group_size, number_groups, num_interactions, period,mu, step_size,coupled, to_migrate, transfert_multiplier, truc,\
                     to_average,tracking,x_i_value,choice)
 
@@ -418,5 +399,6 @@ def launch_sim_iterated(group_size, number_groups, num_interactions, period, mu,
     np.save(os.path.join(dir_path, 'frame_a.npy'), frame_a_store)
     np.save(os.path.join(dir_path, 'frame_x.npy'), frame_x_store)
     np.save(os.path.join(dir_path, 'frame_d.npy'), frame_d_store)
+    np.save(os.path.join(dir_path, 'frame_surplus.npy'), frame_surplus_store)
 
-    print("finished")
+

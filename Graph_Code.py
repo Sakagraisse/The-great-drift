@@ -26,7 +26,7 @@ def compute_graph_1(frame_x):
 
     return data
 
-def create_graph_1(period):
+def create_graph_1(period,figsize):
     # Import frame_x from npy file
     dir_path = os.path.dirname(os.path.abspath(__file__))
     frame_x = np.load(os.path.join(dir_path, 'frame_x.npy'))
@@ -34,7 +34,7 @@ def create_graph_1(period):
     data = compute_graph_1(frame_x)
 
     # Create a figure
-    fig = plt.figure()
+    fig1 = plt.figure(figsize=figsize)
     plt.imshow(data, cmap='gray_r', aspect='auto')
 
     # Customize x-axis labels
@@ -67,7 +67,7 @@ def create_graph_1(period):
     plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.15)
 
     # Return the figure
-    return fig
+    return fig1
 
 @nb.jit(nopython=True)
 def function_1(a,b):
@@ -108,7 +108,6 @@ def compute_graph_2(frame_a, frame_d):
             else:
                 frame_a_bins[j, 8] += 1
 
-    print(frame_a_bins.shape)
     for i in range(0, 75, 1):
         sum_q = np.sum(frame_a_bins[i, :])
         frame_a_bins[i, :] = frame_a_bins[i, :] / sum_q
@@ -119,7 +118,7 @@ def compute_graph_2(frame_a, frame_d):
     return data
 
 
-def create_graph_2(period):
+def create_graph_2(period,figsize):
     # Importer frame_a et frame_d à partir de fichiers npy
     dir_path = os.path.dirname(os.path.abspath(__file__))
     frame_a = np.load(os.path.join(dir_path, 'frame_a.npy'))
@@ -129,7 +128,7 @@ def create_graph_2(period):
 
     colors = ['red', 'lightgreen', 'purple', 'blue', 'darkgreen', 'lightblue', 'orange', 'brown', 'grey']
     # Nombre de groupes (c'est-à-dire nombre de barres empilées)
-    fig, ax = plt.subplots()
+    fig2 = plt.figure(figsize=figsize)
     plt.bar(np.arange(data.shape[1]), data[0, :], color=colors[0])
     bottom = data[0, :]
     for i in range(1, data.shape[0]):
@@ -154,10 +153,29 @@ def create_graph_2(period):
 
     plt.subplots_adjust(left=0.1, right=0.75, top=0.9, bottom=0.15)  # Ajuster la mise en page pour laisser de la place pour la légende
 
-    return fig
+    return fig2
 
 
+def create_graph_3(period,figsize):
+    dir_path = os.path.dirname(os.path.abspath(__file__))
+    frame_surplus = np.load(os.path.join(dir_path, 'frame_surplus.npy'))
+    #sum for each line
+    frame_surplus = np.mean(frame_surplus, axis=1)
+    #create a graph bar showing the surplus
+    fig3 = plt.figure(figsize=figsize)
+    plt.bar(np.arange(frame_surplus.shape[0]), frame_surplus)
 
+    # Customize x-axis labels
+    custom_ticks = np.arange(0, 76, 25)  # Example: custom ticks every 25 periods
+    custom_labels = [f'Gen {int((i/75)*period)}' for i in custom_ticks]  # Example: custom labels
+    plt.xticks(custom_ticks, custom_labels, rotation=45)
+
+    # Labels and title
+    plt.xlabel('Generation', fontsize=15, fontweight='bold')
+    plt.ylabel('Surplus', fontsize=15, fontweight='bold')
+    plt.title('Surplus per generation', fontsize=20, fontweight='bold')
+
+    return fig3
 
 
 
