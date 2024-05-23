@@ -4,14 +4,52 @@ import numpy as np
 import Simulation_Func as SF
 import Graph_Code as GC
 import time
-from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QSpinBox, QLabel, \
+from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QSpinBox, QLabel, QProgressBar,\
     QDoubleSpinBox, QCheckBox, QRadioButton, QButtonGroup, QGroupBox,QGridLayout, QHBoxLayout, \
     QSizePolicy, QTextEdit, QFileDialog
 
+from PyQt6 import QtGui
+
 from PyQt6.QtGui import QPixmap, QColor
-from PyQt6.QtCore import Qt, QSize, QProcess
+from PyQt6.QtCore import Qt, QSize, QProcess,QThread,pyqtSignal, QTimer
+
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib import pyplot as plt
 
 
+class SimulationThread(QThread):
+    def __init__(self, group_size, number_groups, num_interactions, period, mu, step_size, coupled, to_migrate, transfert_multiplier, truc, to_average, tracking):
+        QThread.__init__(self)
+        self.group_size = group_size
+        self.number_groups = number_groups
+        self.num_interactions = num_interactions
+        self.period = period
+        self.mu = mu
+        self.step_size = step_size
+        self.coupled = coupled
+        self.to_migrate = to_migrate
+        self.transfert_multiplier = transfert_multiplier
+        self.truc = truc
+        self.to_average = to_average
+        self.tracking = tracking
+
+    def run(self):
+        SF.launch_sim_iterated(self.group_size, self.number_groups, self.num_interactions, self.period, self.mu, self.step_size, self.coupled, self.to_migrate, self.transfert_multiplier, self.truc, self.to_average,self.tracking)
+
+
+
+class ProgressThread(QThread):
+    progress_signal = pyqtSignal(int, int)  # Signal with two integer parameters
+
+    def __init__(self, tracking):
+        QThread.__init__(self)
+        self.tracking = tracking
+
+
+    def run(self):
+        while True:
+            self.progress_signal.emit(int(self.tracking[0]*100), int(self.tracking[1]*100))  # Emit the signal with the current progress
+            time.sleep(0.1)  # Sleep for 1 second
 class AspectRatioLabel(QLabel):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -26,8 +64,20 @@ class ParameterChooser(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("Parameter Chooser")
-        self.setGeometry(100, 100, 800, 600)
+        screen = QtGui.QGuiApplication.primaryScreen()
+        screen_geo = screen.availableGeometry()
+        screen_width = screen_geo.width()
+        screen_height = screen_geo.height()
+
+        # Create a QHBoxLayout
+        self.main_layout = QHBoxLayout()
+
+        # Create a QVBoxLayout for the left column
+        self.left_column_layout = QVBoxLayout()
+
+        # left size
+
+        #left size group base parameter
 
         self.base_parameters_group = QGroupBox("Base Parameters")
         self.base_parameters_layout = QGridLayout()
@@ -55,7 +105,7 @@ class ParameterChooser(QWidget):
         self.base_parameters_layout.addWidget(self.num_interactions_label, 0, 2)
         self.base_parameters_layout.addWidget(self.num_interactions_input, 0, 3)
 
-        self.period_label = QLabel("Period")
+        self.period_label = QLabel("Number of Periods")
         self.period_input = QSpinBox()
         self.period_input.setRange(100, 200000)
         self.period_input.setValue(50000)  # Set default value
@@ -63,14 +113,14 @@ class ParameterChooser(QWidget):
         self.base_parameters_layout.addWidget(self.period_label, 1, 2)
         self.base_parameters_layout.addWidget(self.period_input, 1, 3)
 
-        self.to_migrate_label = QLabel("To Migrate")
+        self.to_migrate_label = QLabel("Individuals to Migrate")
         self.to_migrate_input = QSpinBox()
         self.to_migrate_input.setRange(0, 240)
         self.to_migrate_input.setValue(8)  # Set default value
         self.base_parameters_layout.addWidget(self.to_migrate_label, 2, 0)
         self.base_parameters_layout.addWidget(self.to_migrate_input, 2, 1)
 
-        self.mu_label = QLabel("Mu")
+        self.mu_label = QLabel("Mutation rate")
         self.mu_input = QDoubleSpinBox()
         self.mu_input.setRange(0.01, 1.00)
         self.mu_input.setSingleStep(0.01)
@@ -87,7 +137,7 @@ class ParameterChooser(QWidget):
         self.base_parameters_layout.addWidget(self.step_size_label, 2, 2)
         self.base_parameters_layout.addWidget(self.step_size_input, 2, 3)
 
-        self.truc_label = QLabel("Truc")
+        self.truc_label = QLabel("Fitness Weight")
         self.truc_input = QDoubleSpinBox()
         self.truc_input.setRange(0, 1.00)
         self.truc_input.setSingleStep(0.01)
@@ -103,160 +153,200 @@ class ParameterChooser(QWidget):
         self.base_parameters_layout.addWidget(self.transfert_multiplier_label, 5, 0)
         self.base_parameters_layout.addWidget(self.transfert_multiplier_input, 5, 1)
 
+        # Create a checkbox for "Coupled"
+        self.coupled_checkbox = QCheckBox("Coupled")
+        self.coupled_checkbox.setChecked(True)  # Set "Coupled" as the default value
 
-        # Create radio buttons for "Coupled" and "Uncoupled"
-        self.coupled_button = QRadioButton("Coupled")
-        self.coupled_button.setChecked(True)  # Set "Coupled" as the default value
-        self.uncoupled_button = QRadioButton("Uncoupled")
+        # Add the checkbox to the layout
+        self.base_parameters_layout.addWidget(self.coupled_checkbox, 5, 2)
 
-        # Add the radio buttons to the layout
-        self.base_parameters_layout.addWidget(self.coupled_button, 6, 0)
-        self.base_parameters_layout.addWidget(self.uncoupled_button, 6, 2)
 
-        # Create a button group to make the radio buttons exclusive
-        self.coupled_button_group = QButtonGroup()
-        self.coupled_button_group.addButton(self.coupled_button)
-        self.coupled_button_group.addButton(self.uncoupled_button)
 
-        self.base_parameters_group.setLayout(self.base_parameters_layout)
 
-        #Create a QGroupBox for Average over simulations
-        self.average_group = QGroupBox("Average over simulations")
-        self.average_layout = QVBoxLayout()
-
-        self.number_average_input = QLabel("Step Size")
         self.number_average_input = QSpinBox()
         self.number_average_input.setRange(1, 30)
         self.number_average_input.setValue(1)
         self.number_average_input.setSingleStep(1)
-        self.average_layout.addWidget(self.number_average_input)
 
-        self.average_group.setLayout(self.average_layout)
+        # Create a QVBoxLayout for the QGroupBox
+        self.base_parameters_box_layout = QVBoxLayout()
 
-        # Create a QHBoxLayout
-        self.main_layout = QHBoxLayout()
+        # Add the QGridLayout to the QVBoxLayout
+        self.base_parameters_box_layout.addLayout(self.base_parameters_layout)
 
-        # Create a QVBoxLayout for the left column
-        self.left_column_layout = QVBoxLayout()
+        # Add the QSpinBox to the QVBoxLayout
+        self.base_parameters_box_layout.addWidget(self.number_average_input)
 
-        # Add the base parameters group and the simulation type group to the left column
-        self.left_column_layout.addWidget(self.base_parameters_group)
-        self.left_column_layout.addWidget(self.average_group)
+        # Set the QVBoxLayout as the layout for the QGroupBox
+        self.base_parameters_group.setLayout(self.base_parameters_box_layout)
 
-        # Add the submit button to the left column
+        #create a group box for intial conditions
+        self.initial_conditions_group = QGroupBox("Initial Conditions")
+        self.initial_conditions_layout = QVBoxLayout()
+
+        #create 3 radio button mutually exclusive "Perfect Reciprocators", "Uncoditionnaly selfish" and "Eq degree of Escallation"
+
+        self.perfect_reciprocators_radio = QRadioButton("Perfect Reciprocators")
+        self.uncoditionnaly_selfish_radio = QRadioButton("Uncoditionnaly selfish")
+        self.eq_degree_of_escallation_radio = QRadioButton("Eq degree of Escallation")
+
+        #create a button group for the radio button
+        self.initial_conditions_button_group = QButtonGroup()
+        self.initial_conditions_button_group.addButton(self.perfect_reciprocators_radio)
+        self.initial_conditions_button_group.addButton(self.uncoditionnaly_selfish_radio)
+        self.initial_conditions_button_group.addButton(self.eq_degree_of_escallation_radio)
+
+        #add the radio button to the layout
+        self.initial_conditions_layout.addWidget(self.perfect_reciprocators_radio)
+        self.initial_conditions_layout.addWidget(self.uncoditionnaly_selfish_radio)
+        self.initial_conditions_layout.addWidget(self.eq_degree_of_escallation_radio)
+
+        #by deflaut the perfect reciprocators radio button is checked
+        self.perfect_reciprocators_radio.setChecked(True)
+
+        #set the layout for the group box
+        self.initial_conditions_group.setLayout(self.initial_conditions_layout)
+
+
+
+        # create a group for the graph buttons
+        self.graph_group = QGroupBox("Graphs")
+        # create 2 by 2 grid layout
+        self.graph_grid_layout = QGridLayout()
+
+        #create buttons to choose between the 3 graph and "Save all"
+        self.graph1_button = QPushButton("Graph 1")
+        self.graph1_button.clicked.connect(self.draw_graph_1)
+        self.graph_grid_layout.addWidget(self.graph1_button, 0, 0)
+
+        self.graph2_button = QPushButton("Graph 2")
+        self.graph2_button.clicked.connect(self.draw_graph_2)
+        self.graph_grid_layout.addWidget(self.graph2_button, 1, 0)
+
+        self.graph3_button = QPushButton("Graph 3")
+        self.graph_grid_layout.addWidget(self.graph3_button, 0, 1)
+
+        self.save_all_button = QPushButton("Save All")
+        self.save_all_button.clicked.connect(self.save_plots)
+        self.graph_grid_layout.addWidget(self.save_all_button, 1, 1)
+
+
+        self.graph_group.setLayout(self.graph_grid_layout)
+
+
+        #create a groupbox for Simulation
+        self.simulation_group = QGroupBox("Simulation")
+        # Create a 2x1 grid layout for the submit and stop buttons
+        self.submit_stop_layout = QGridLayout()
+
+        # Create a QPushButton for the submit button
         self.submit_button = QPushButton("Submit")
         self.submit_button.clicked.connect(self.submit)
-        self.left_column_layout.addWidget(self.submit_button)
+        self.submit_stop_layout.addWidget(self.submit_button, 0, 0)
+
+
+        self.simulation_group.setLayout(self.submit_stop_layout)
+
+        # Add layout to the left column layout
+        self.left_column_layout.addWidget(self.base_parameters_group)
+        self.left_column_layout.addWidget(self.graph_group)
+        self.left_column_layout.addWidget(self.initial_conditions_group)
+        self.left_column_layout.addWidget(self.simulation_group)
+
+
 
         # Add the left column layout to the main layout
         self.main_layout.addLayout(self.left_column_layout)
 
-
-
         # Create a QVBoxLayout for the right column
         self.right_column_layout = QVBoxLayout()
 
-        # Create a QHBoxLayout for the buttons
-        self.button_layout = QHBoxLayout()
+        # create a group box for the two prgress bar
+        self.progress_group = QGroupBox("Progress")
+        self.progress_group.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
+        self.progress_layout = QVBoxLayout()
 
-        # Create the "Graph 1" and "Graph 2" buttons
-        self.graph1_button = QPushButton("Graph 1")
-        self.graph1_button.clicked.connect(self.graph1)
-        self.button_layout.addWidget(self.graph1_button)
+        # Create a progress bar for the simulation
+        self.simulation_progress = QProgressBar()
 
-        self.graph2_button = QPushButton("Graph 2")
-        self.graph2_button.clicked.connect(self.graph2)
-        self.button_layout.addWidget(self.graph2_button)
+        self.simulation_progress.setRange(0, 100)
+        self.simulation_progress.setValue(0)
 
-        self.save_plot1_button = QPushButton("Save Plot 1")
-        self.save_plot1_button.clicked.connect(self.save_plot1)
-        self.button_layout.addWidget(self.save_plot1_button)
+        self.progress_layout.addWidget(self.simulation_progress)
 
-        self.save_plot2_button = QPushButton("Save Plot 2")
-        self.save_plot2_button.clicked.connect(self.save_plot2)
-        self.button_layout.addWidget(self.save_plot2_button)
+        # Create a progress bar for the graph
+        self.graph_progress = QProgressBar()
 
-        # Create a QGroupBox for the buttons
-        self.graph_type_group = QGroupBox("Type of Graph")
-        self.graph_type_group.setLayout(self.button_layout)
+        self.graph_progress.setRange(0, 100)
+        self.graph_progress.setValue(0)
 
-        # Add the graph type group to the right column layout
-        self.right_column_layout.addWidget(self.graph_type_group)
+        self.progress_layout.addWidget(self.graph_progress)
 
-        pixmap = QPixmap(600, 400)  # Adjust the size to fit your needs
-        pixmap.fill(QColor(0, 0, 0, 0))  # Fill the QPixmap with a transparent color
+        # Add the progress layout to the progress group
+        self.progress_group.setLayout(self.progress_layout)
 
-        # Create a QLabel for the graph
-        self.graph_label = QLabel()
+        # Add the progress group to the right column layout
+        self.right_column_layout.addWidget(self.progress_group)
 
-        self.graph_label.setPixmap(pixmap)
+        # create a group box for the graph display
+        self.graph_group = QGroupBox("Graph Display")
+        self.graph_layout = QVBoxLayout()
 
+        self.fig = plt.figure()
+        self.canvas = FigureCanvas(self.fig)
+        self.graph_layout.addWidget(self.canvas)
 
-        self.right_column_layout.addWidget(self.graph_label)
+        self.graph_group.setLayout(self.graph_layout)
 
+        self.right_column_layout.addWidget(self.graph_group)
+        # Donner la priorité à la groupbox "Graph Display"
+        self.right_column_layout.setStretchFactor(self.graph_group, 1)
 
-        # Add the right column layout to the main layout
+        # Réduire la priorité de la groupbox "Progress"
+        self.right_column_layout.setStretchFactor(self.progress_group, 0)
+        #add the left column layout to the main layout
         self.main_layout.addLayout(self.right_column_layout)
 
-        # Set the main layout of the window
+        # Set the main layout as the layout for the window
         self.setLayout(self.main_layout)
 
+        # Set default window size as a ratio of the screen size
+        # Set window size to 80% of screen size
+        window_width = int(screen_width * 0.8)
+        window_height = int(screen_height * 0.8)
+        self.setGeometry(0, 0, window_width, window_height)
+        self.setWindowTitle('The Great Drift')
 
 
-        #self.setLayout(self.layout)
-
-    def save_plot1(self):
-        # Open a QFileDialog to choose the save location
-        save_path, _ = QFileDialog.getSaveFileName(self, "Save Plot 1", "", "PNG Files (*.png);;All Files (*)")
-
-        # If a save location was chosen (i.e., the user didn't cancel the dialog)
-        if save_path:
-            # Save the current plot to the chosen location
-            GC.create_frame_x_graph_2(self.period_input.value())
-            pixmap = QPixmap(os.path.join(os.path.dirname(os.path.abspath(__file__)), "frame_x.png"))
-            pixmap.save(save_path)
-
-            print(f"Plot 1 saved to {save_path}")
-
-    def save_plot2(self):
-        # Open a QFileDialog to choose the save location
-        save_path, _ = QFileDialog.getSaveFileName(self, "Save Plot 2", "", "PNG Files (*.png);;All Files (*)")
-
-        # If a save location was chosen (i.e., the user didn't cancel the dialog)
-        if save_path:
-            # Save the current plot to the chosen location
-            GC.create_graph_pop_type_2()
-            pixmap = QPixmap(os.path.join(os.path.dirname(os.path.abspath(__file__)), "frame_a.png"))
-            pixmap.save(save_path)
-
-            print(f"Plot 2 saved to {save_path}")
 
 
-    def update_theta_lambda(self, checked):
-        if checked:
-            self.theta_input.setEnabled(False)
-            self.lambda_param_input.setEnabled(False)
-        else:
-            self.theta_input.setEnabled(True)
-            self.lambda_param_input.setEnabled(True)
+        # Create
 
-    def update_num_interactions(self, checked):
-        if checked:
-            self.num_interactions_input.setValue(1)
-            self.num_interactions_input.setEnabled(False)
-        else:
-            self.num_interactions_input.setValue(100)
-            self.num_interactions_input.setEnabled(True)
+    def draw_graph_1(self):
+        # use create_graph_1 from Graph_Code.py to create the graph and display it in the canevas
+        fig = GC.create_graph_1(self.period_input.value())
 
-    def get_dir_size(self, path):
-        total_size = 0
-        for dirpath, dirnames, filenames in os.walk(path):
-            for f in filenames:
-                fp = os.path.join(dirpath, f)
-                # Skip if it is symbolic link
-                if not os.path.islink(fp):
-                    total_size += os.path.getsize(fp)
-        return total_size
+        # Clear the existing figure on the canvas
+        self.canvas.figure.clear()
+
+        # Add the new figure to the canvas
+        self.canvas.figure = fig
+
+        # Draw the canvas
+        self.canvas.draw()
+
+    def draw_graph_2(self):
+        # use create_graph_2 from Graph_Code.py to create the graph and display it in the canevas
+        fig = GC.create_graph_2(self.period_input.value())
+
+        # Clear the existing figure on the canvas
+        self.canvas.figure.clear()
+
+        # Add the new figure to the canvas
+        self.canvas.figure = fig
+
+        # Draw the canvas
+        self.canvas.draw()
 
     def submit(self):
         group_size = self.group_size_input.value()
@@ -267,45 +357,49 @@ class ParameterChooser(QWidget):
         mu = self.mu_input.value()
         step_size = self.step_size_input.value()
         truc = self.truc_input.value()
-        coupled = self.coupled_button.isChecked()
+        coupled = self.coupled_checkbox.isChecked()
         transfert_multiplier = self.transfert_multiplier_input.value()
         to_average = self.number_average_input.value()
+        tracking = [0, 0]
 
-        print(f"Group Size: {group_size}")
-        print(f"Number of Groups: {number_groups}")
-        print(f"Number of Interactions: {num_interactions}")
-        print(f"To Migrate: {to_migrate}")
-        print(f"Period: {period}")
-        print(f"Mu: {mu}")
-        print(f"Step Size: {step_size}")
-        print(f"Truc: {truc}")
-        print(f"Coupled: {coupled}")
-        print(f"Transfert Multiplier: {transfert_multiplier}")
+        self.simulation_thread = SimulationThread(group_size, number_groups, num_interactions, period, mu, step_size,\
+                                                  coupled, to_migrate, transfert_multiplier, truc, to_average,tracking)
+        self.simulation_thread.finished.connect(self.on_simulation_finished)
 
-        SF.launch_sim_iterated(group_size, number_groups, num_interactions, period, mu, step_size, \
-                            coupled, to_migrate, transfert_multiplier, truc, to_average)
+        self.progress_thread = ProgressThread(self.simulation_thread.tracking)
+        self.progress_thread.progress_signal.connect(self.update_progress)
+        self.progress_thread.start()
+        self.simulation_thread.start()
+
+    def on_simulation_finished(self):
+        # This method will be called when the simulation is finished
+        print("Simulation finished")
+        self.progress_thread.terminate()
+        print("Progress thread terminated")
+        self.update_progress(100, 100)
+        #show graph 2
+        self.draw_graph_2()
 
 
+    def update_progress(self, simulation_progress, graph_progress):
+        self.simulation_progress.setValue(simulation_progress)  # Update the simulation progress bar with the current progress
+        self.graph_progress.setValue(graph_progress)
 
-    def graph1(self):
-        # Generate the graph and save it as an image
-        GC.create_frame_x_graph_2(self.period_input.value())
-        # Load the image into the QLabel
-        dir_path = os.path.dirname(os.path.abspath(__file__))
-        pixmap = QPixmap(os.path.join(dir_path, "frame_x.png"))
-        self.graph_label.setPixmap(pixmap)
-        self.graph_label.resize(pixmap.width(), pixmap.height())
-        print("finished")
+    def save_plots(self):
+        GC.store_all_graphs(self.period_input.value())
+        # Open a QFileDialog to choose the save directory
+        save_dir = QFileDialog.getExistingDirectory(self, "Select Directory")
 
-    def graph2(self):
-        # Generate the graph and save it as an image
-        GC.create_graph_pop_type_2()
-        # Load the image into the QLabel
-        dir_path = os.path.dirname(os.path.abspath(__file__))
-        pixmap = QPixmap(os.path.join(dir_path, "frame_a.png"))
-        self.graph_label.setPixmap(pixmap)
-        self.graph_label.resize(pixmap.width(), pixmap.height())
-        print("finished")
+        # If a save directory was chosen (i.e., the user didn't cancel the dialog)
+        if save_dir:
+            # Save the current plots to the chosen directory
+            pixmap1 = QPixmap(os.path.join(os.path.dirname(os.path.abspath(__file__)), "frame_x.png"))
+            pixmap1.save(os.path.join(save_dir, "frame_x.png"))
+
+            pixmap2 = QPixmap(os.path.join(os.path.dirname(os.path.abspath(__file__)), "frame_a.png"))
+            pixmap2.save(os.path.join(save_dir, "frame_a.png"))
+
+            print(f"Plots saved to {save_dir}")
 
 
 app = QApplication([])

@@ -20,7 +20,8 @@ def create_frames(period, group_size, number_groups):
     frame_fitnessToT = np.zeros((period, (group_size * number_groups)))
 
     # Initialize the index array
-    index = np.round(np.linspace(0, frame_x.shape[0] - 1, 75)).astype(np.int64)
+    index = np.round(np.linspace(0, frame_x.shape[0]-1, 75)).astype(np.int64)
+    print(index)
 
     return frame_a, frame_x, frame_d, frame_t, frame_u, frame_v, frame_fitnessToT, index
 
@@ -315,14 +316,14 @@ def costum_shuffle_pop(x_i,a_i,d_i,fitness):
 
 
 
-@nb.jit(nopython=True)
+#@nb.jit(nopython=True)
 def main_loop_iterated(x_i, d_i, a_i, t_i, u_i, v_i, fitnessIN, fitnessOUT, fitnessToT,store_interaction, \
                        frame_a, frame_x, frame_d, frame_t,frame_u, frame_v, frame_fitnessToT,\
-                        group_size, number_groups, num_interactions, period,mu, step_size,coupled, to_migrate, transfert_multiplier, truc):
+                        group_size, number_groups, num_interactions, period,mu, step_size,coupled, to_migrate, transfert_multiplier, truc, tracking):
 
     compi=0
     for i in range(0, period, 1):
-        print("Progress:", round((i / period) * 100), "%")
+        #print("Progress:", round((i / period) * 100), "%")
         # store the data
         frame_a, frame_x, frame_d, frame_t, frame_u, frame_v, frame_fitnessToT = store_data(x_i, d_i, a_i, t_i, u_i, v_i, fitnessToT, frame_a, frame_x, frame_d, frame_t, frame_u, frame_v, \
                    frame_fitnessToT, i)
@@ -345,20 +346,28 @@ def main_loop_iterated(x_i, d_i, a_i, t_i, u_i, v_i, fitnessIN, fitnessOUT, fitn
         #Reproduction
         x_i, d_i, a_i = reproduction_pop(x_i, d_i, a_i, fitnessToT,number_groups, mu, step_size)
 
+        tracking[0] = i/period
+
     return frame_a, frame_x, frame_d
 
 
-def loop_iterated(x_i, d_i, a_i, t_i, u_i, v_i, fitnessIN, fitnessOUT, fitnessToT,store_interaction, \
-                    frame_a, frame_x, frame_d, frame_t,frame_u, frame_v, frame_fitnessToT,\
-                    group_size, number_groups, num_interactions, period,mu, step_size,coupled, to_migrate, transfert_multiplier, truc,\
-                    to_average, index):
+#@nb.jit(nopython=True)
+def loop_iterated(group_size, number_groups, num_interactions, period,mu, step_size,coupled, to_migrate, transfert_multiplier, truc,\
+                    to_average,tracking):
 
 
     for i in range(1, (to_average + 1), 1):
-        frame_a, frame_x, frame_d= main_loop_iterated(x_i, d_i, a_i, t_i, u_i, v_i, fitnessIN, fitnessOUT, fitnessToT, store_interaction, \
+        frame_a, frame_x, frame_d, frame_t, frame_u, frame_v, frame_fitnessToT, index = create_frames(period,
+                                                                                                      group_size,
+                                                                                                      number_groups)
+
+        x_i, d_i, a_i, t_i, u_i, v_i, store_interaction, fitnessIN, fitnessOUT, fitnessToT \
+            = create_initial_pop(group_size, number_groups, num_interactions)
+
+        frame_a, frame_x, frame_d = main_loop_iterated(x_i, d_i, a_i, t_i, u_i, v_i, fitnessIN, fitnessOUT, fitnessToT, store_interaction, \
                            frame_a, frame_x, frame_d, frame_t, frame_u, frame_v, frame_fitnessToT, \
                            group_size, number_groups, num_interactions, period, mu, step_size, coupled, to_migrate,\
-                           transfert_multiplier, truc)
+                           transfert_multiplier, truc,tracking)
 
         if i == 1:
             frame_x_store = frame_x[index, :]
@@ -368,24 +377,21 @@ def loop_iterated(x_i, d_i, a_i, t_i, u_i, v_i, fitnessIN, fitnessOUT, fitnessTo
             frame_x_store = np.hstack((frame_x_store, frame_x[index, :]))
             frame_a_store = np.hstack((frame_a_store, frame_a[index, :]))
             frame_d_store = np.hstack((frame_d_store, frame_d[index, :]))
+            print(frame_a_store.shape, frame_x_store.shape, frame_d_store.shape)
+        tracking[1]= i/ to_average
 
     return frame_x_store, frame_a_store, frame_d_store
 
 
 def launch_sim_iterated(group_size, number_groups, num_interactions, period, mu, step_size, \
-                                coupled, to_migrate, transfert_multiplier, truc,to_average):
+                                coupled, to_migrate, transfert_multiplier, truc,to_average,tracking):
 
-    frame_a, frame_x, frame_d, frame_t, frame_u, frame_v, frame_fitnessToT, index = create_frames(period, group_size, number_groups)
-
-    x_i, d_i, a_i, t_i, u_i, v_i, store_interaction, fitnessIN, fitnessOUT, fitnessToT \
-        = create_initial_pop(group_size, number_groups, num_interactions)
 
     dir_path = os.path.dirname(os.path.abspath(__file__))
 
-    frame_x_store, frame_a_store, frame_d_store = loop_iterated(x_i, d_i, a_i, t_i, u_i, v_i, fitnessIN, fitnessOUT, fitnessToT,store_interaction, \
-                    frame_a, frame_x, frame_d, frame_t,frame_u, frame_v, frame_fitnessToT,\
+    frame_x_store, frame_a_store, frame_d_store = loop_iterated(\
                     group_size, number_groups, num_interactions, period,mu, step_size,coupled, to_migrate, transfert_multiplier, truc,\
-                    to_average, index)
+                    to_average,tracking)
 
     for file in os.listdir(dir_path):
         if file.endswith(".npy"):
