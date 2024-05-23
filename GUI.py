@@ -91,6 +91,8 @@ class ParameterChooser(QWidget):
         self.group_size_input.setRange(1, 240)
         self.group_size_input.setValue(24)  # Set default value
         self.group_size_input.setSingleStep(12)
+        test = self.base_parameters_group.width()
+        self.group_size_input.setMinimumWidth(int(0.1*test))
         self.base_parameters_layout.addWidget(self.group_size_label, 0, 0)
         self.base_parameters_layout.addWidget(self.group_size_input, 0, 1)
 
