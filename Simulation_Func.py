@@ -3,7 +3,7 @@ import os
 import numpy as np
 import numba as nb
 import time
-
+from math import sqrt
 ################
 # Create base player
 ################
@@ -27,7 +27,7 @@ def create_frames(period, group_size, number_groups):
 
 
 @nb.jit(nopython=True)
-def create_initial_pop(group_size, number_groups, num_interactions):
+def create_initial_pop(group_size, number_groups, num_interactions,transfert_multiplier,x_i_value,choice):
     """
     This function creates the initial population of players for a simulation.
 
@@ -36,9 +36,27 @@ def create_initial_pop(group_size, number_groups, num_interactions):
     number_groups (int): The total number of groups in the population.
     num_interactions (int): The number of interactions each player has.
     """
-    x_i = np.ones((number_groups, group_size), dtype=np.float64)
-    d_i = np.ones((number_groups, group_size), dtype=np.float64)
-    a_i = np.zeros((number_groups, group_size), dtype=np.float64)
+    delta = 1 - (1/num_interactions)
+    equilibrium_degree = (delta * (1 - transfert_multiplier) + sqrt((delta ** 2) * ((1 - transfert_multiplier) ** 2) + 4 * transfert_multiplier * delta)) / (2 * transfert_multiplier * delta)
+    a_hat = 1 - equilibrium_degree
+
+    if choice == 0:
+        x_i = np.ones((number_groups, group_size), dtype=np.float64)*x_i_value
+        a_i = np.zeros((number_groups, group_size), dtype=np.float64)
+        d_i = np.ones((number_groups, group_size), dtype=np.float64)
+
+    elif choice == 1:
+        x_i = np.ones((number_groups, group_size), dtype=np.float64)*x_i_value
+        a_i = np.zeros((number_groups, group_size), dtype=np.float64)
+        d_i = np.zeros((number_groups, group_size), dtype=np.float64)
+    elif choice == 2:
+        x_i = np.ones((number_groups, group_size), dtype=np.float64)*x_i_value
+        #a_i is a_hat
+        a_i = np.ones((number_groups, group_size), dtype=np.float64) * a_hat
+        d_i = np.ones((number_groups, group_size), dtype=np.float64)
+    else:
+        raise ValueError("The choice must be 0, 1 or 2")
+
     t_i = np.zeros((number_groups, group_size), dtype=np.float64)
     u_i = np.zeros((number_groups, group_size), dtype=np.float64)
     v_j = np.ones((number_groups, group_size), dtype=np.float64)
@@ -353,7 +371,7 @@ def main_loop_iterated(x_i, d_i, a_i, t_i, u_i, v_i, fitnessIN, fitnessOUT, fitn
 
 #@nb.jit(nopython=True)
 def loop_iterated(group_size, number_groups, num_interactions, period,mu, step_size,coupled, to_migrate, transfert_multiplier, truc,\
-                    to_average,tracking):
+                    to_average,tracking, x_i_value, choice):
 
 
     for i in range(1, (to_average + 1), 1):
@@ -362,7 +380,7 @@ def loop_iterated(group_size, number_groups, num_interactions, period,mu, step_s
                                                                                                       number_groups)
 
         x_i, d_i, a_i, t_i, u_i, v_i, store_interaction, fitnessIN, fitnessOUT, fitnessToT \
-            = create_initial_pop(group_size, number_groups, num_interactions)
+            = create_initial_pop(group_size, number_groups, num_interactions, transfert_multiplier, x_i_value, choice)
 
         frame_a, frame_x, frame_d = main_loop_iterated(x_i, d_i, a_i, t_i, u_i, v_i, fitnessIN, fitnessOUT, fitnessToT, store_interaction, \
                            frame_a, frame_x, frame_d, frame_t, frame_u, frame_v, frame_fitnessToT, \
@@ -384,14 +402,14 @@ def loop_iterated(group_size, number_groups, num_interactions, period,mu, step_s
 
 
 def launch_sim_iterated(group_size, number_groups, num_interactions, period, mu, step_size, \
-                                coupled, to_migrate, transfert_multiplier, truc,to_average,tracking):
+                                coupled, to_migrate, transfert_multiplier, truc,to_average,tracking,x_i_value,choice):
 
 
     dir_path = os.path.dirname(os.path.abspath(__file__))
 
     frame_x_store, frame_a_store, frame_d_store = loop_iterated(\
                     group_size, number_groups, num_interactions, period,mu, step_size,coupled, to_migrate, transfert_multiplier, truc,\
-                    to_average,tracking)
+                    to_average,tracking,x_i_value,choice)
 
     for file in os.listdir(dir_path):
         if file.endswith(".npy"):

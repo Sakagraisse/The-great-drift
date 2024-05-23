@@ -18,7 +18,7 @@ from matplotlib import pyplot as plt
 
 
 class SimulationThread(QThread):
-    def __init__(self, group_size, number_groups, num_interactions, period, mu, step_size, coupled, to_migrate, transfert_multiplier, truc, to_average, tracking):
+    def __init__(self, group_size, number_groups, num_interactions, period, mu, step_size, coupled, to_migrate, transfert_multiplier, truc, to_average, tracking,x_i_value,choice):
         QThread.__init__(self)
         self.group_size = group_size
         self.number_groups = number_groups
@@ -32,9 +32,11 @@ class SimulationThread(QThread):
         self.truc = truc
         self.to_average = to_average
         self.tracking = tracking
+        self.x_i_value = x_i_value
+        self.choice = choice
 
     def run(self):
-        SF.launch_sim_iterated(self.group_size, self.number_groups, self.num_interactions, self.period, self.mu, self.step_size, self.coupled, self.to_migrate, self.transfert_multiplier, self.truc, self.to_average,self.tracking)
+        SF.launch_sim_iterated(self.group_size, self.number_groups, self.num_interactions, self.period, self.mu, self.step_size, self.coupled, self.to_migrate, self.transfert_multiplier, self.truc, self.to_average,self.tracking,self.x_i_value,self.choice)
 
 
 
@@ -108,7 +110,7 @@ class ParameterChooser(QWidget):
         self.period_label = QLabel("Number of Periods")
         self.period_input = QSpinBox()
         self.period_input.setRange(100, 200000)
-        self.period_input.setValue(50000)  # Set default value
+        self.period_input.setValue(1500)  # Set default value
         self.period_input.setSingleStep(10000)
         self.base_parameters_layout.addWidget(self.period_label, 1, 2)
         self.base_parameters_layout.addWidget(self.period_input, 1, 3)
@@ -153,19 +155,27 @@ class ParameterChooser(QWidget):
         self.base_parameters_layout.addWidget(self.transfert_multiplier_label, 5, 0)
         self.base_parameters_layout.addWidget(self.transfert_multiplier_input, 5, 1)
 
+        self.x_i_value_label = QLabel("Initial x_i value")
+        self.x_i_value_input = QDoubleSpinBox()
+        self.x_i_value_input.setRange(0, 1)
+        self.x_i_value_input.setSingleStep(0.01)
+        self.x_i_value_input.setValue(1)
+        self.base_parameters_layout.addWidget(self.x_i_value_label, 5, 2)
+
+
         # Create a checkbox for "Coupled"
         self.coupled_checkbox = QCheckBox("Coupled")
         self.coupled_checkbox.setChecked(True)  # Set "Coupled" as the default value
 
         # Add the checkbox to the layout
-        self.base_parameters_layout.addWidget(self.coupled_checkbox, 5, 2)
+        self.base_parameters_layout.addWidget(self.coupled_checkbox, 6, 1)
 
 
 
 
         self.number_average_input = QSpinBox()
         self.number_average_input.setRange(1, 30)
-        self.number_average_input.setValue(1)
+        self.number_average_input.setValue(5)
         self.number_average_input.setSingleStep(1)
 
         # Create a QVBoxLayout for the QGroupBox
@@ -360,10 +370,17 @@ class ParameterChooser(QWidget):
         coupled = self.coupled_checkbox.isChecked()
         transfert_multiplier = self.transfert_multiplier_input.value()
         to_average = self.number_average_input.value()
+        x_i_value = self.x_i_value_input.value()
         tracking = [0, 0]
+        if self.perfect_reciprocators_radio.isChecked():
+            choice = 0
+        elif self.uncoditionnaly_selfish_radio.isChecked():
+            choice = 1
+        else:
+            choice = 2
 
         self.simulation_thread = SimulationThread(group_size, number_groups, num_interactions, period, mu, step_size,\
-                                                  coupled, to_migrate, transfert_multiplier, truc, to_average,tracking)
+                                                  coupled, to_migrate, transfert_multiplier, truc, to_average,tracking,x_i_value,choice)
         self.simulation_thread.finished.connect(self.on_simulation_finished)
 
         self.progress_thread = ProgressThread(self.simulation_thread.tracking)
