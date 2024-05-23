@@ -64,7 +64,7 @@ def create_graph_1(period,figsize):
     plt.title('Coupled', fontsize=20, fontweight='bold')
 
     # Adjust layout for better visualization
-    plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.15)
+    plt.subplots_adjust(left=0.1, right=0.95, top=0.9, bottom=0.2)
 
     # Return the figure
     return fig1
@@ -147,11 +147,10 @@ def create_graph_2(period,figsize):
 
     # Ajuster la position de la légende
     plt.legend(["Unconditionally selfish", "De-escalators", "Quasi-de-escalator", "Ambiguous", "Perfect reciprocators", "Quasi-de-escalator", "Escalators",
-                "Unconditionally generous", "Other"], loc="upper left", bbox_to_anchor=(1.05, 1))
+                "Unconditionally generous", "Other"], bbox_to_anchor=(1.05, 1), fontsize='x-small')
 
 
-
-    plt.subplots_adjust(left=0.1, right=0.75, top=0.9, bottom=0.15)  # Ajuster la mise en page pour laisser de la place pour la légende
+    plt.subplots_adjust(left=0.1, right=0.75, top=0.9, bottom=0.2)  # Ajuster la mise en page pour laisser de la place pour la légende
 
     return fig2
 
@@ -174,6 +173,8 @@ def create_graph_3(period,figsize):
     plt.xlabel('Generation', fontsize=15, fontweight='bold')
     plt.ylabel('Surplus', fontsize=15, fontweight='bold')
     plt.title('Surplus per generation', fontsize=20, fontweight='bold')
+
+    plt.subplots_adjust(left=0.1, right=0.95, top=0.9, bottom=0.2)
 
     return fig3
 
