@@ -182,6 +182,7 @@ class ParameterChooser(QWidget):
         self.x_i_value_input.setValue(1)
         self.x_i_value_input.setMinimumWidth(test)
         self.base_parameters_layout.addWidget(self.x_i_value_label, 5, 2)
+        self.base_parameters_layout.addWidget(self.x_i_value_input, 5, 3)
 
 
         # Create a checkbox for "Coupled"

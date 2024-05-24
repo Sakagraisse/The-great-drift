@@ -120,7 +120,8 @@ def meta_pop(number_groups, frame_x, frame_a, frame_d):
 
 
 @nb.jit(nopython=True)
-def migration(x_i, d_i, a_i, to_migrate,number_groups, group_size):
+def migration(x_i, d_i, a_i, fitnessToT, fitnessOUT, fitnessIN, surplus, number_groups, group_size, to_migrate):
+
     """
     Create the migration of pop groups
     """
@@ -128,11 +129,15 @@ def migration(x_i, d_i, a_i, to_migrate,number_groups, group_size):
         raise ValueError("The number of migrants is greater than the group size")
 
     if to_migrate == 0:
-        return x_i, d_i, a_i
+        return x_i, d_i, a_i, fitnessToT, fitnessOUT, fitnessIN, surplus
 
     temp_x_i = np.zeros((number_groups,to_migrate), dtype=np.float64)
     temp_d_i = np.zeros((number_groups,to_migrate), dtype=np.float64)
     temp_a_i = np.zeros((number_groups,to_migrate), dtype=np.float64)
+    temp_fitnessToT = np.zeros((number_groups,to_migrate), dtype=np.float64)
+    temp_fitnessOUT = np.zeros((number_groups,to_migrate), dtype=np.float64)
+    temp_fitnessIN = np.zeros((number_groups,to_migrate), dtype=np.float64)
+    temp_surplus = np.zeros((number_groups,to_migrate), dtype=np.float64)
 
 
     # extract from the pop the migrants
@@ -142,17 +147,35 @@ def migration(x_i, d_i, a_i, to_migrate,number_groups, group_size):
         x_i[i,:] = x_i[i,indices]
         d_i[i,:] = d_i[i,indices]
         a_i[i,:] = a_i[i,indices]
+        fitnessToT[i,:] = fitnessToT[i,indices]
+        fitnessOUT[i,:] = fitnessOUT[i,indices]
+        fitnessIN[i,:] = fitnessIN[i,indices]
+        surplus[i,:] = surplus[i,indices]
+
         temp_x_i[i,:] = x_i[i,0:to_migrate]
         x_i[i,0:to_migrate] = np.zeros(to_migrate, dtype=np.float64)
         temp_d_i[i,:] = d_i[i,0:to_migrate]
         d_i[i,0:to_migrate] = np.zeros(to_migrate, dtype=np.float64)
         temp_a_i[i,:] = a_i[i,0:to_migrate]
         a_i[i,0:to_migrate] = np.zeros(to_migrate, dtype=np.float64)
+        temp_fitnessToT[i,:] = fitnessToT[i,0:to_migrate]
+        fitnessToT[i,0:to_migrate] = np.zeros(to_migrate, dtype=np.float64)
+        temp_fitnessOUT[i,:] = fitnessOUT[i,0:to_migrate]
+        fitnessOUT[i,0:to_migrate] = np.zeros(to_migrate, dtype=np.float64)
+        temp_fitnessIN[i,:] = fitnessIN[i,0:to_migrate]
+        fitnessIN[i,0:to_migrate] = np.zeros(to_migrate, dtype=np.float64)
+        temp_surplus[i,:] = surplus[i,0:to_migrate]
+        surplus[i,0:to_migrate] = np.zeros(to_migrate, dtype=np.float64)
+
 
 
     temp_x_i = temp_x_i.ravel()
     temp_d_i = temp_d_i.ravel()
     temp_a_i = temp_a_i.ravel()
+    temp_fitnessToT = temp_fitnessToT.ravel()
+    temp_fitnessOUT = temp_fitnessOUT.ravel()
+    temp_fitnessIN = temp_fitnessIN.ravel()
+    temp_surplus = temp_surplus.ravel()
 
 
     indices2 = np.arange((to_migrate * number_groups))
@@ -161,14 +184,23 @@ def migration(x_i, d_i, a_i, to_migrate,number_groups, group_size):
     temp_x_i[:] = temp_x_i[indices2]
     temp_d_i[:] = temp_d_i[indices2]
     temp_a_i[:] = temp_a_i[indices2]
+    temp_fitnessToT[:] = temp_fitnessToT[indices2]
+    temp_fitnessOUT[:] = temp_fitnessOUT[indices2]
+    temp_fitnessIN[:] = temp_fitnessIN[indices2]
+    temp_surplus[:] = temp_surplus[indices2]
 
 
     for j in range(number_groups):
         x_i[j,0:to_migrate] = temp_x_i[j*to_migrate:(j+1)*to_migrate]
         d_i[j,0:to_migrate] = temp_d_i[j*to_migrate:(j+1)*to_migrate]
         a_i[j,0:to_migrate] = temp_a_i[j*to_migrate:(j+1)*to_migrate]
+        fitnessToT[j,0:to_migrate] = temp_fitnessToT[j*to_migrate:(j+1)*to_migrate]
+        fitnessOUT[j,0:to_migrate] = temp_fitnessOUT[j*to_migrate:(j+1)*to_migrate]
+        fitnessIN[j,0:to_migrate] = temp_fitnessIN[j*to_migrate:(j+1)*to_migrate]
+        surplus[j,0:to_migrate] = temp_surplus[j*to_migrate:(j+1)*to_migrate]
 
-    return x_i, d_i, a_i
+
+    return x_i, d_i, a_i, fitnessToT, fitnessOUT, fitnessIN, surplus
 
 
 
@@ -331,7 +363,8 @@ def main_loop_iterated(x_i, d_i, a_i, fitnessIN, fitnessOUT, fitnessToT,store_in
 
         #Migration(Coupled)
         if coupled:
-            x_i, d_i, a_i = migration(x_i, d_i, a_i, to_migrate, number_groups, group_size)
+            x_i, d_i, a_i,fitnessToT, fitnessOUT, fitnessIN, surplus = migration(x_i, d_i, a_i, fitnessToT, fitnessOUT, fitnessIN, surplus, number_groups, group_size, to_migrate)
+
 
         #Social Dilemma
         x_i, d_i, a_i, store_interaction, fitnessIN,surplus = IN_social_dilemma(x_i, d_i, a_i, store_interaction, fitnessIN, number_groups, group_size,\
@@ -342,7 +375,7 @@ def main_loop_iterated(x_i, d_i, a_i, fitnessIN, fitnessOUT, fitnessToT,store_in
 
         #Migration (Decoupled)
         if not coupled:
-             x_i, d_i, a_i= migration(x_i, d_i, a_i, to_migrate, number_groups, group_size)
+             x_i, d_i, a_i,fitnessToT, fitnessOUT, fitnessIN, surplus = migration(x_i, d_i, a_i, fitnessToT, fitnessOUT, fitnessIN, surplus, number_groups, group_size, to_migrate)
 
         #Reproduction
         x_i, d_i, a_i = reproduction_pop(x_i, d_i, a_i, fitnessToT,number_groups, mu, step_size)
