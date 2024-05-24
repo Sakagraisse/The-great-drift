@@ -84,6 +84,7 @@ class ParameterChooser(QWidget):
         #left size group base parameter
 
         self.base_parameters_group = QGroupBox("Base Parameters")
+        test = self.base_parameters_group.width()
         self.base_parameters_layout = QGridLayout()
 
         self.group_size_label = QLabel("Group Size")
@@ -91,7 +92,7 @@ class ParameterChooser(QWidget):
         self.group_size_input.setRange(1, 240)
         self.group_size_input.setValue(24)  # Set default value
         self.group_size_input.setSingleStep(12)
-        test = self.base_parameters_group.width()
+
         self.group_size_input.setMinimumWidth(int(0.1*test))
         self.base_parameters_layout.addWidget(self.group_size_label, 0, 0)
         self.base_parameters_layout.addWidget(self.group_size_input, 0, 1)
@@ -101,6 +102,7 @@ class ParameterChooser(QWidget):
         self.number_groups_input.setRange(1, 100)
         self.number_groups_input.setSingleStep(10)
         self.number_groups_input.setValue(40)  # Set default value
+        self.number_groups_input.setMinimumWidth(int(0.1*test))
         self.base_parameters_layout.addWidget(self.number_groups_label, 1, 0)
         self.base_parameters_layout.addWidget(self.number_groups_input, 1, 1)
 
@@ -108,6 +110,7 @@ class ParameterChooser(QWidget):
         self.num_interactions_input = QSpinBox()
         self.num_interactions_input.setRange(1, 1000)
         self.num_interactions_input.setValue(100)  # Set default value
+        self.num_interactions_input.setMinimumWidth(int(0.1*test))
         self.base_parameters_layout.addWidget(self.num_interactions_label, 0, 2)
         self.base_parameters_layout.addWidget(self.num_interactions_input, 0, 3)
 
@@ -116,6 +119,7 @@ class ParameterChooser(QWidget):
         self.period_input.setRange(100, 200000)
         self.period_input.setValue(1500)  # Set default value
         self.period_input.setSingleStep(10000)
+        self.period_input.setMinimumWidth(int(0.1*test))
         self.base_parameters_layout.addWidget(self.period_label, 1, 2)
         self.base_parameters_layout.addWidget(self.period_input, 1, 3)
 
@@ -123,14 +127,16 @@ class ParameterChooser(QWidget):
         self.to_migrate_input = QSpinBox()
         self.to_migrate_input.setRange(0, 240)
         self.to_migrate_input.setValue(8)  # Set default value
+        self.to_migrate_input.setMinimumWidth(int(0.1*test))
         self.base_parameters_layout.addWidget(self.to_migrate_label, 2, 0)
         self.base_parameters_layout.addWidget(self.to_migrate_input, 2, 1)
 
         self.mu_label = QLabel("Mutation rate")
         self.mu_input = QDoubleSpinBox()
-        self.mu_input.setRange(0.01, 1.00)
-        self.mu_input.setSingleStep(0.01)
-        self.mu_input.setValue(0.02)  # Set default value
+        self.mu_input.setRange(0, 100)
+        self.mu_input.setSingleStep(0.5)
+        self.mu_input.setValue(2)  # Set default value
+        self.mu_input.setMinimumWidth(int(0.1*test))
         self.base_parameters_layout.addWidget(self.mu_label, 3, 0)
         self.base_parameters_layout.addWidget(self.mu_input, 3, 1)
 
@@ -140,6 +146,7 @@ class ParameterChooser(QWidget):
         self.step_size_input.setSingleStep(0.001)
         self.step_size_input.setValue(0.025)  # Set default value
         self.step_size_input.setDecimals(3)
+        self.step_size_input.setMinimumWidth(int(0.1*test))
         self.base_parameters_layout.addWidget(self.step_size_label, 2, 2)
         self.base_parameters_layout.addWidget(self.step_size_input, 2, 3)
 
@@ -148,6 +155,7 @@ class ParameterChooser(QWidget):
         self.truc_input.setRange(0, 1.00)
         self.truc_input.setSingleStep(0.01)
         self.truc_input.setValue(0.5)  # Set default value
+        self.truc_input.setMinimumWidth(int(0.1*test))
         self.base_parameters_layout.addWidget(self.truc_label, 3, 2)
         self.base_parameters_layout.addWidget(self.truc_input, 3, 3)
 
@@ -156,6 +164,7 @@ class ParameterChooser(QWidget):
         self.transfert_multiplier_input.setRange(0, 100)
         self.transfert_multiplier_input.setSingleStep(0.1)
         self.transfert_multiplier_input.setValue(2)  # Set default value
+        self.transfert_multiplier_input.setMinimumWidth(int(0.1*test))
         self.base_parameters_layout.addWidget(self.transfert_multiplier_label, 5, 0)
         self.base_parameters_layout.addWidget(self.transfert_multiplier_input, 5, 1)
 
@@ -164,6 +173,7 @@ class ParameterChooser(QWidget):
         self.x_i_value_input.setRange(0, 1)
         self.x_i_value_input.setSingleStep(0.01)
         self.x_i_value_input.setValue(1)
+        self.x_i_value_input.setMinimumWidth(int(0.1*test))
         self.base_parameters_layout.addWidget(self.x_i_value_label, 5, 2)
 
 
@@ -427,7 +437,7 @@ class ParameterChooser(QWidget):
         num_interactions = self.num_interactions_input.value()
         to_migrate = self.to_migrate_input.value()
         period = self.period_input.value()
-        mu = self.mu_input.value()
+        mu = self.mu_input.value()/100
         step_size = self.step_size_input.value()
         truc = self.truc_input.value()
         coupled = self.coupled_checkbox.isChecked()
