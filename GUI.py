@@ -532,15 +532,17 @@ class ParameterChooser(QWidget):
         # Enregistrer le fichier
         np.save(file_path, submitted_parameters)
 
+        if not hasattr(self, 'simulation_thread') or not self.simulation_thread.isRunning():
+            self.simulation_thread = SimulationThread(group_size, number_groups, num_interactions, period, mu, step_size,\
+                                                      coupled, to_migrate, transfert_multiplier, truc, to_average,tracking,x_i_value,choice)
+            self.simulation_thread.finished.connect(self.on_simulation_finished)
 
-        self.simulation_thread = SimulationThread(group_size, number_groups, num_interactions, period, mu, step_size,\
-                                                  coupled, to_migrate, transfert_multiplier, truc, to_average,tracking,x_i_value,choice)
-        self.simulation_thread.finished.connect(self.on_simulation_finished)
-
-        self.progress_thread = ProgressThread(self.simulation_thread.tracking)
-        self.progress_thread.progress_signal.connect(self.update_progress)
-        self.progress_thread.start()
-        self.simulation_thread.start()
+            self.progress_thread = ProgressThread(self.simulation_thread.tracking)
+            self.progress_thread.progress_signal.connect(self.update_progress)
+            self.progress_thread.start()
+            self.simulation_thread.start()
+        else:
+            print("SimulationThread is already running")
 
     def on_simulation_finished(self):
         # This method will be called when the simulation is finished
