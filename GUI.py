@@ -34,7 +34,7 @@ class SimulationThread(QThread):
         self.choice = choice
 
     def run(self):
-        #SF.launch_sim_iterated(self.group_size, self.number_groups, self.num_interactions, self.period, self.mu, self.step_size, self.coupled, self.to_migrate, self.transfert_multiplier, self.truc, self.to_average,self.tracking,self.x_i_value,self.choice)
+        SF.launch_sim_iterated(self.group_size, self.number_groups, self.num_interactions, self.period, self.mu, self.step_size, self.coupled, self.to_migrate, self.transfert_multiplier, self.truc, self.to_average,self.tracking,self.x_i_value,self.choice)
         #copy submitted parameters to a file named "last_simulation_parameters.npy"
         submitted_parameters = {"group_size": self.group_size, "number_groups": self.number_groups, "num_interactions": self.num_interactions, "period": self.period, "mu": self.mu, "step_size": self.step_size, "coupled": self.coupled, "to_migrate": self.to_migrate, "transfert_multiplier": self.transfert_multiplier, "truc": self.truc, "to_average": self.to_average, "tracking": self.tracking, "x_i_value": self.x_i_value, "choice": self.choice}
         # Obtenir le chemin du répertoire du script actuel
@@ -550,7 +550,7 @@ class ParameterChooser(QWidget):
         self.update_progress(100, 100)
         #show graph 2
 
-        #self.draw_graph_2()
+        self.draw_graph_2()
 
 
     def update_progress(self, simulation_progress, graph_progress):

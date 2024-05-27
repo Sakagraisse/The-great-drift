@@ -425,9 +425,9 @@ def launch_sim_iterated(group_size, number_groups, num_interactions, period, mu,
                     group_size, number_groups, num_interactions, period,mu, step_size,coupled, to_migrate, transfert_multiplier, truc,\
                     to_average,tracking,x_i_value,choice)
 
-    for file in os.listdir(dir_path):
-        if file.endswith(".npy"):
-            os.remove(file)
+    #for file in os.listdir(dir_path):
+        #if file.endswith(".npy"):
+            #os.remove(file)
 
     np.save(os.path.join(dir_path, 'frame_a.npy'), frame_a_store)
     np.save(os.path.join(dir_path, 'frame_x.npy'), frame_x_store)
