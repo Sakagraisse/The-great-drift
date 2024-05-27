@@ -352,7 +352,13 @@ class ParameterChooser(QWidget):
         window_height = int(screen_height * 0.8)
         self.setGeometry(0, 0, window_width, window_height)
         self.setWindowTitle('The Great Drift')
-        self.draw_graph_2()
+
+        # check if is the required files are in the directory
+        if os.path.isfile('frame_a.npy') and os.path.isfile('frame_x.npy') and os.path.isfile('frame_d.npy'):
+            self.draw_graph_2()
+        else:
+            print("Error: Required files not found")
+
 
 
 
@@ -502,6 +508,7 @@ class ParameterChooser(QWidget):
         print("Progress thread terminated")
         self.update_progress(100, 100)
         #show graph 2
+
         self.draw_graph_2()
 
 
