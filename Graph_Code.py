@@ -61,7 +61,7 @@ def create_graph_1(period,figsize):
     # Labels and title
     plt.xlabel('Generation', fontsize=15, fontweight='bold')
     plt.ylabel('Proportion', fontsize=15, fontweight='bold')
-    plt.title('Coupled', fontsize=20, fontweight='bold')
+    plt.title('Evolution of First Move', fontsize=20, fontweight='bold')
 
     # Adjust layout for better visualization
     plt.subplots_adjust(left=0.1, right=0.95, top=0.9, bottom=0.2)
@@ -141,7 +141,7 @@ def create_graph_2(period,figsize):
 
     plt.gca().yaxis.set_tick_params(rotation=90)
 
-    plt.title('Stacked Bar Graph', fontsize=20, fontweight='bold')
+    plt.title('Evolution of Strategies', fontsize=20, fontweight='bold')
     plt.xlabel("Generation", fontsize=15, fontweight='bold')
     plt.ylabel("Proportion", fontsize=15, fontweight='bold')
 
@@ -185,75 +185,108 @@ def create_graph_3(period,figsize):
 
 
 def store_all_graphs(period):
+    # Import frame_x from npy file
     dir_path = os.path.dirname(os.path.abspath(__file__))
     frame_x = np.load(os.path.join(dir_path, 'frame_x.npy'))
-    data = compute_graph_1(period,frame_x)
 
-    # Création du graphique
-    plt.figure(figsize=(12, 8))
-    plt.imshow(data, cmap='viridis', aspect='auto')  # Utilisation de 'viridis' pour une meilleure lisibilité
-    plt.colorbar(label='Value')
+    data = compute_graph_1(frame_x)
 
-    # Calcul des indices pour le début, un quart, trois quarts et la fin
-    period = data.shape[1]
-    indices = [0, period // 3, 2 * period // 3, period - 1]
+    # Create a figure
+    plt.figure(figsize=(10, 6))
+    plt.imshow(data, cmap='gray_r', aspect='auto')
 
-    # Sélection des périodes correspondantes
-    selected_periods = np.arange(period)
-    selected_periods = selected_periods[indices]
+    # Customize x-axis labels
+    custom_ticks = np.arange(0, 76, 25)
+    custom_labels = [f'Gen {int((i / 75) * period)}' for i in custom_ticks]
+    plt.xticks(custom_ticks, custom_labels, rotation=45)
 
-    # Définir les ticks sur l'axe des x aux indices sélectionnés
-    plt.xticks(indices, selected_periods)
-    custom_ticks = np.arange(0, 1.1, 0.1)  # définir les ticks personnalisés pour l'axe y
-    custom_ticks = np.round(custom_ticks, 1)  # arrondir à une décimale
-
-    # Définir les ticks sur l'axe des y
+    # Customize y-axis labels
+    custom_ticks = np.arange(0, 1.1, 0.1)
+    custom_ticks = np.round(custom_ticks, 1)
     plt.yticks(np.linspace(0, data.shape[0] - 1, len(custom_ticks)), custom_ticks)
-    plt.gca().invert_yaxis()  # Inverser l'axe y pour correspondre au graphique fourni
+    plt.gca().invert_yaxis()
 
-    # Étiquettes et titre
-    plt.xlabel('Generation')
-    plt.ylabel('Proportion')
-    plt.title('Coupled $m_j=0$')
-    # plt.show()
-    # save the graph
+    # Customize y-axis labels
+    num_ticks = data.shape[0] + 1
+    custom_ticks = np.linspace(0, 1, num_ticks)
+    custom_ticks = np.round(custom_ticks, 2)
+    plt.yticks(np.arange(-0.5, data.shape[0]), custom_ticks)
+
+    # Customize y-axis tick rotation
+    plt.gca().yaxis.set_tick_params(rotation=90)
+
+    # Labels and title
+    plt.xlabel('Generation', fontsize=15, fontweight='bold')
+    plt.ylabel('Proportion', fontsize=15, fontweight='bold')
+    plt.title('Evolution of First Move', fontsize=20, fontweight='bold')
+
+    # Adjust layout for better visualization
+    #plt.subplots_adjust(left=0.1, right=0.95, top=0.9, bottom=0.2)
+    plt.subplots_adjust(left=0.1, right=0.8, top=0.85, bottom=0.2)
     dir_path = os.path.dirname(os.path.abspath(__file__))
-    plt.savefig(os.path.join(dir_path, 'frame_x.png'), dpi=75)
+    plt.savefig(os.path.join(dir_path, 'Evolution_of_First_Move.pdf'), dpi=150)
 
+    # Importer frame_a et frame_d à partir de fichiers npy
     dir_path = os.path.dirname(os.path.abspath(__file__))
     frame_a = np.load(os.path.join(dir_path, 'frame_a.npy'))
     frame_d = np.load(os.path.join(dir_path, 'frame_d.npy'))
 
+    data = compute_graph_2(frame_a, frame_d)
 
-    frame_a_bins = compute_graph_2(frame_a, frame_d)
-
-    for i in range(0, 75, 1):
-        sum_q = np.sum(frame_a_bins[i, :])
-        frame_a_bins[i, :] = frame_a_bins[i, :] / sum_q
-    data = frame_a_bins
-    #transposing the data
-    data = data.T
     colors = ['red', 'lightgreen', 'purple', 'blue', 'darkgreen', 'lightblue', 'orange', 'brown', 'grey']
     # Nombre de groupes (c'est-à-dire nombre de barres empilées)
-    plt.figure(figsize=(12, 8))
+    plt.figure(figsize=(10, 6))
     plt.bar(np.arange(data.shape[1]), data[0, :], color=colors[0])
     bottom = data[0, :]
     for i in range(1, data.shape[0]):
         plt.bar(np.arange(data.shape[1]), data[i, :], bottom=bottom, color=colors[i])
         bottom += data[i, :]
-    plt.title('Stacked Bar Graph')
-    plt.xlabel("Generation")
-    plt.ylabel("Proportion")
-    plt.legend(["Unconditionally selfish", "De−escalators",  "Quasi-de-escalator", "Ambiguous", "Perfect reciprocators", "Quasi-de-escalator","Escalators",
-                "Unconditionally generous", "Other"], loc="upper left",
-               bbox_to_anchor=(1, 1))
+    # Customiser les étiquettes de l'axe des x
+    custom_ticks = np.arange(0, 76, 25)  # Example: custom ticks every 25 periods
+    custom_labels = [f'Gen {int((i / 75) * period)}' for i in custom_ticks]  # Example: custom labels
+    plt.xticks(custom_ticks, custom_labels, rotation=45)
 
-    #plt.show()
+    plt.gca().yaxis.set_tick_params(rotation=90)
+
+    plt.title('Evolution of Strategies', fontsize=20, fontweight='bold')
+    plt.xlabel("Generation", fontsize=15, fontweight='bold')
+    plt.ylabel("Proportion", fontsize=15, fontweight='bold')
+
+    # Ajuster la position de la légende
+    plt.legend(["Unconditionally selfish", "De-escalators", "Quasi-de-escalator", "Ambiguous", "Perfect reciprocators",
+                "Quasi-de-escalator", "Escalators",
+                "Unconditionally generous", "Other"], bbox_to_anchor=(1.05, 1), fontsize='x-small')
+
+    plt.subplots_adjust(left=0.1, right=0.8, top=0.85,bottom=0.2)  # Ajuster la mise en page pour laisser de la place pour la légende
+
     # Sauvegarder le graphique
     dir_path = os.path.dirname(os.path.abspath(__file__))
-    plt.savefig(os.path.join(dir_path, 'frame_a.png'), dpi=75)
+    plt.savefig(os.path.join(dir_path, 'Evolution_of_Strategies.pdf'), dpi=150)
+
+    dir_path = os.path.dirname(os.path.abspath(__file__))
+    frame_surplus = np.load(os.path.join(dir_path, 'frame_surplus.npy'))
+    # sum for each line
+    frame_surplus = np.mean(frame_surplus, axis=1)
+    # create a graph bar showing the surplus
+    plt.figure(figsize=(10, 6))
+    plt.bar(np.arange(frame_surplus.shape[0]), frame_surplus)
+
+    # Customize x-axis labels
+    custom_ticks = np.arange(0, 76, 25)  # Example: custom ticks every 25 periods
+    custom_labels = [f'Gen {int((i / 75) * period)}' for i in custom_ticks]  # Example: custom labels
+    plt.xticks(custom_ticks, custom_labels, rotation=45)
+
+    # Labels and title
+    plt.xlabel('Generation', fontsize=15, fontweight='bold')
+    plt.ylabel('Surplus', fontsize=15, fontweight='bold')
+    plt.title('Surplus per generation', fontsize=20, fontweight='bold')
+
+    #plt.subplots_adjust(left=0.1, right=0.95, top=0.9, bottom=0.2)
+    plt.subplots_adjust(left=0.1, right=0.8, top=0.85, bottom=0.2)
+    # Sauvegarder le graphique
+    dir_path = os.path.dirname(os.path.abspath(__file__))
+    plt.savefig(os.path.join(dir_path, 'Surplus_per_generation.pdf'), dpi=150)
 
 
     return
-
 

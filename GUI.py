@@ -39,7 +39,10 @@ class SimulationThread(QThread):
 
     def run(self):
         SF.launch_sim_iterated(self.group_size, self.number_groups, self.num_interactions, self.period, self.mu, self.step_size, self.coupled, self.to_migrate, self.transfert_multiplier, self.truc, self.to_average,self.tracking,self.x_i_value,self.choice)
-
+        #copy submitted parameters to a file named "last_simulation_parameters.npy"
+        submitted_parameters = {"group_size": self.group_size, "number_groups": self.number_groups, "num_interactions": self.num_interactions, "period": self.period, "mu": self.mu, "step_size": self.step_size, "coupled": self.coupled, "to_migrate": self.to_migrate, "transfert_multiplier": self.transfert_multiplier, "truc": self.truc, "to_average": self.to_average, "tracking": self.tracking, "x_i_value": self.x_i_value, "choice": self.choice}
+        np.save('last_simulation_parameters.npy', submitted_parameters)
+        print("Simulation finished")
 
 
 class ProgressThread(QThread):
@@ -192,9 +195,7 @@ class ParameterChooser(QWidget):
         # Add the checkbox to the layout
         self.base_parameters_layout.addWidget(self.coupled_checkbox, 6, 1)
 
-
-
-
+        self.number_average_label = QLabel("Number of Simulations to Average")
         self.number_average_input = QSpinBox()
         self.number_average_input.setRange(1, 30)
         self.number_average_input.setValue(5)
@@ -207,6 +208,7 @@ class ParameterChooser(QWidget):
         self.base_parameters_box_layout.addLayout(self.base_parameters_layout)
 
         # Add the QSpinBox to the QVBoxLayout
+        self.base_parameters_box_layout.addWidget(self.number_average_label)
         self.base_parameters_box_layout.addWidget(self.number_average_input)
 
         # Set the QVBoxLayout as the layout for the QGroupBox
@@ -221,6 +223,7 @@ class ParameterChooser(QWidget):
         self.perfect_reciprocators_radio = QRadioButton("Perfect Reciprocators")
         self.uncoditionnaly_selfish_radio = QRadioButton("Uncoditionnaly selfish")
         self.eq_degree_of_escallation_radio = QRadioButton("Eq degree of Escallation")
+        self.eq_degree_of_escallation_radio.clicked.connect(self.check_x_i_value)
 
         #create a button group for the radio button
         self.initial_conditions_button_group = QButtonGroup()
@@ -353,7 +356,11 @@ class ParameterChooser(QWidget):
 
 
         # Create
-
+    def check_x_i_value(self):
+        if self.x_i_value_input.value() == 1:
+            self.x_i_value_input.setValue(0.95)
+        else :
+            pass
     def draw_graph_1(self):
         # Get the size of the canvas in pixels
         canvas_size = self.canvas.size()
@@ -361,8 +368,12 @@ class ParameterChooser(QWidget):
         # Convert the size to inches
         canvas_size_inches = canvas_size.width() / self.canvas.figure.dpi, canvas_size.height() / self.canvas.figure.dpi
 
+        #retrieve last simulation parameters
+        last_simulation_parameters = np.load('last_simulation_parameters.npy', allow_pickle=True).item()
+        period = last_simulation_parameters["period"]
+
         # Use create_graph_1 from Graph_Code.py to create the graph with the size of the canvas
-        self.fig1 = GC.create_graph_1(self.period_input.value(), figsize=canvas_size_inches)
+        self.fig1 = GC.create_graph_1(period, figsize=canvas_size_inches)
 
         # Remove the existing canvas from the layout
         self.graph_layout.removeWidget(self.canvas)
@@ -390,8 +401,12 @@ class ParameterChooser(QWidget):
         # Convert the size to inches
         canvas_size_inches = canvas_size.width() / self.canvas.figure.dpi, canvas_size.height() / self.canvas.figure.dpi
 
+        # retrieve last simulation parameters
+        last_simulation_parameters = np.load('last_simulation_parameters.npy', allow_pickle=True).item()
+        period = last_simulation_parameters["period"]
+
         # Use create_graph_2 from Graph_Code.py to create the graph with the size of the canvas
-        self.fig2 = GC.create_graph_2(self.period_input.value(), figsize=canvas_size_inches)
+        self.fig2 = GC.create_graph_2(period, figsize=canvas_size_inches)
 
         # Remove the existing canvas from the layout
         self.graph_layout.removeWidget(self.canvas)
@@ -418,8 +433,12 @@ class ParameterChooser(QWidget):
         # Convert the size to inches
         canvas_size_inches = canvas_size.width() / self.canvas.figure.dpi, canvas_size.height() / self.canvas.figure.dpi
 
+        # retrieve last simulation parameters
+        last_simulation_parameters = np.load('last_simulation_parameters.npy', allow_pickle=True).item()
+        period = last_simulation_parameters["period"]
+
         # Use create_graph_3 from Graph_Code.py to create the graph with the size of the canvas
-        self.fig3 = GC.create_graph_3(self.period_input.value(), figsize=canvas_size_inches)
+        self.fig3 = GC.create_graph_3(period, figsize=canvas_size_inches)
 
         # Remove the existing canvas from the layout
         self.graph_layout.removeWidget(self.canvas)
@@ -460,6 +479,11 @@ class ParameterChooser(QWidget):
         else:
             choice = 2
 
+        #store all parameter on a dictionary and then store it in a file named, submitted parameters
+        submitted_parameters = {"group_size": group_size, "number_groups": number_groups, "num_interactions": num_interactions, "to_migrate": to_migrate, "period": period, "mu": mu, "step_size": step_size, "truc": truc, "coupled": coupled, "transfert_multiplier": transfert_multiplier, "to_average": to_average, "tracking": tracking, "x_i_value": x_i_value, "choice": choice}
+        np.save('submitted_parameters.npy', submitted_parameters)
+
+
         self.simulation_thread = SimulationThread(group_size, number_groups, num_interactions, period, mu, step_size,\
                                                   coupled, to_migrate, transfert_multiplier, truc, to_average,tracking,x_i_value,choice)
         self.simulation_thread.finished.connect(self.on_simulation_finished)
@@ -484,18 +508,38 @@ class ParameterChooser(QWidget):
         self.graph_progress.setValue(graph_progress)
 
     def save_plots(self):
-        GC.store_all_graphs(self.period_input.value())
+
+        # retrieve last simulation parameters
+        last_simulation_parameters = np.load('last_simulation_parameters.npy', allow_pickle=True).item()
+        period = last_simulation_parameters["period"]
+
+        GC.store_all_graphs(period)
         # Open a QFileDialog to choose the save directory
         save_dir = QFileDialog.getExistingDirectory(self, "Select Directory")
 
         # If a save directory was chosen (i.e., the user didn't cancel the dialog)
         if save_dir:
             # Save the current plots to the chosen directory
-            pixmap1 = QPixmap(os.path.join(os.path.dirname(os.path.abspath(__file__)), "frame_x.png"))
-            pixmap1.save(os.path.join(save_dir, "frame_x.png"))
+            import shutil
 
-            pixmap2 = QPixmap(os.path.join(os.path.dirname(os.path.abspath(__file__)), "frame_a.png"))
-            pixmap2.save(os.path.join(save_dir, "frame_a.png"))
+            # Définir le chemin d'origine et de destination
+            src_file1 = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Evolution_of_First_Move.pdf")
+            dest_file1 = os.path.join(save_dir, "Evolution_of_First_Move.pdf")
+
+            src_file2 = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Evolution_of_Strategies.pdf")
+            dest_file2 = os.path.join(save_dir, "Evolution_of_Strategies.pdf")
+
+            src_file3 = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Surplus_per_generation.pdf")
+            dest_file3 = os.path.join(save_dir, "Surplus_per_generation.pdf")
+
+            # Copier les fichiers
+            shutil.copy(src_file1, dest_file1)
+            shutil.copy(src_file2, dest_file2)
+            shutil.copy(src_file3, dest_file3)
+
+            #save the dictionary of submitted parameters in a txt file
+            with open(os.path.join(save_dir, "last_simulation_parameters.txt"), "w") as file:
+                file.write(str(np.load('last_simulation_parameters.npy', allow_pickle=True).item()))
 
             print(f"Plots saved to {save_dir}")
 
