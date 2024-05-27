@@ -602,7 +602,7 @@ class ParameterChooser(QWidget):
 
             #save the dictionary of submitted parameters in a txt file
             with open(os.path.join(save_dir, "last_simulation_parameters.txt"), "w") as file:
-                file.write(str(np.load('last_simulation_parameters.npy', allow_pickle=True).item()))
+                file.write(str(np.load(file_path, allow_pickle=True).item()))
 
             print(f"Plots saved to {save_dir}")
 

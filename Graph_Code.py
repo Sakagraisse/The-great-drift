@@ -5,8 +5,9 @@ import os
 import numpy as np
 
 import matplotlib.pyplot as plt
+#import matplotlib
 import numba as nb
-
+#matplotlib.use('Agg')
 
 # calaculus for graph 1
 
