@@ -250,19 +250,19 @@ class ParameterChooser(QWidget):
         self.graph_grid_layout = QGridLayout()
 
         #create buttons to choose between the 3 graph and "Save all"
-        self.graph1_button = QPushButton("Graph 1")
+        self.graph1_button = QPushButton("Evolution of First Move")
         self.graph1_button.clicked.connect(self.draw_graph_1)
         self.graph_grid_layout.addWidget(self.graph1_button, 0, 0)
 
-        self.graph2_button = QPushButton("Graph 2")
+        self.graph2_button = QPushButton("Evolution of Strategies")
         self.graph2_button.clicked.connect(self.draw_graph_2)
-        self.graph_grid_layout.addWidget(self.graph2_button, 1, 0)
+        self.graph_grid_layout.addWidget(self.graph2_button, 0, 1)
 
-        self.graph3_button = QPushButton("Graph 3")
+        self.graph3_button = QPushButton("Surplus per generation")
         self.graph3_button.clicked.connect(self.draw_graph_3)
-        self.graph_grid_layout.addWidget(self.graph3_button, 0, 1)
+        self.graph_grid_layout.addWidget(self.graph3_button, 1, 0)
 
-        self.save_all_button = QPushButton("Save All")
+        self.save_all_button = QPushButton("Save All + parameters")
         self.save_all_button.clicked.connect(self.save_plots)
         self.graph_grid_layout.addWidget(self.save_all_button, 1, 1)
 

@@ -13,9 +13,9 @@ import numba as nb
 @nb.jit(nopython=True)
 def compute_graph_1(frame_x):
 
-    frame_x_bins = np.zeros((75, 10))
+    frame_x_bins = np.zeros((76, 10))
     bins = np.arange(0, 1.1, 0.1)
-    for i in range(0, 75, 1):
+    for i in range(0, 76, 1):
         hist, bin_edges = np.histogram(frame_x[i, :], bins)
         frame_x_bins[i, :] = hist
 
@@ -78,8 +78,8 @@ def function_1(a,b):
 def compute_graph_2(frame_a, frame_d):
 
     # Créer un tableau de 75 colonnes et 6 lignes
-    frame_a_bins = np.zeros((75, 9))  # Increase the size of the array to accommodate the new categories
-    for j in range(0, 75, 1):
+    frame_a_bins = np.zeros((76, 9))  # Increase the size of the array to accommodate the new categories
+    for j in range(0, 76, 1):
         for i in range(0, len(frame_a[j]), 1):
             if frame_a[j, i] == 0 and frame_d[j, i] == 0:
                 frame_a_bins[j, 0] += 1
@@ -108,7 +108,7 @@ def compute_graph_2(frame_a, frame_d):
             else:
                 frame_a_bins[j, 8] += 1
 
-    for i in range(0, 75, 1):
+    for i in range(0, 76, 1):
         sum_q = np.sum(frame_a_bins[i, :])
         frame_a_bins[i, :] = frame_a_bins[i, :] / sum_q
     data = frame_a_bins
