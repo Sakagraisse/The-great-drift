@@ -5,7 +5,7 @@ block_cipher = None
 a = Analysis(['GUI.py'],
              pathex=[],
              binaries=[],
-             datas=[],
+             datas=[('frame_a.npy', '.'), ('frame_x.npy', '.'), ('frame_d.npy', '.'),('frame_surplus.npy', '.'),('frame_t.npy', '.'),('frame_u.npy', '.'),('frame_v.npy', '.'),('frame_fitnessToT.npy', '.'),(last_simulation_parameters.npy', '.')],
              hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],
@@ -24,7 +24,7 @@ exe = EXE(pyz,
           strip=False,
           upx=False,
           runtime_tmpdir=None,
-          console=True,
+          console=False,
           icon='icon.ico')
 
 app = BUNDLE(exe,
