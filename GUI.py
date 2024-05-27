@@ -132,7 +132,7 @@ class ParameterChooser(QWidget):
         self.period_input = QSpinBox()
         self.period_input.setRange(100, 200000)
         self.period_input.setValue(1500)  # Set default value
-        self.period_input.setSingleStep(1000)
+        self.period_input.setSingleStep(500)
         self.period_input.setMinimumWidth(test)
         self.base_parameters_layout.addWidget(self.period_label, 1, 2)
         self.base_parameters_layout.addWidget(self.period_input, 1, 3)
