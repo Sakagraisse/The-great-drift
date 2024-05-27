@@ -75,6 +75,7 @@ class ParameterChooser(QWidget):
         screen_geo = screen.availableGeometry()
         screen_width = screen_geo.width()
         screen_height = screen_geo.height()
+
         
         
 
@@ -128,7 +129,7 @@ class ParameterChooser(QWidget):
         self.period_input = QSpinBox()
         self.period_input.setRange(100, 200000)
         self.period_input.setValue(1500)  # Set default value
-        self.period_input.setSingleStep(10000)
+        self.period_input.setSingleStep(1000)
         self.period_input.setMinimumWidth(test)
         self.base_parameters_layout.addWidget(self.period_label, 1, 2)
         self.base_parameters_layout.addWidget(self.period_input, 1, 3)
@@ -137,11 +138,12 @@ class ParameterChooser(QWidget):
         self.to_migrate_input = QSpinBox()
         self.to_migrate_input.setRange(0, 240)
         self.to_migrate_input.setValue(8)  # Set default value
+        self.to_migrate_input.setSingleStep(8)
         self.to_migrate_input.setMinimumWidth(test)
         self.base_parameters_layout.addWidget(self.to_migrate_label, 2, 0)
         self.base_parameters_layout.addWidget(self.to_migrate_input, 2, 1)
 
-        self.mu_label = QLabel("Mutation rate")
+        self.mu_label = QLabel("Mutation rate in %")
         self.mu_input = QDoubleSpinBox()
         self.mu_input.setRange(0, 100)
         self.mu_input.setSingleStep(0.5)
@@ -150,12 +152,11 @@ class ParameterChooser(QWidget):
         self.base_parameters_layout.addWidget(self.mu_label, 3, 0)
         self.base_parameters_layout.addWidget(self.mu_input, 3, 1)
 
-        self.step_size_label = QLabel("Step Size")
+        self.step_size_label = QLabel("Step Size x 100")
         self.step_size_input = QDoubleSpinBox()
-        self.step_size_input.setRange(0.010, 1.000)
-        self.step_size_input.setSingleStep(0.001)
-        self.step_size_input.setValue(0.025)  # Set default value
-        self.step_size_input.setDecimals(3)
+        self.step_size_input.setRange(1, 100)
+        self.step_size_input.setSingleStep(0.5)
+        self.step_size_input.setValue(2.5)  # Set default value
         self.step_size_input.setMinimumWidth(test)
         self.base_parameters_layout.addWidget(self.step_size_label, 2, 2)
         self.base_parameters_layout.addWidget(self.step_size_input, 2, 3)
@@ -351,6 +352,7 @@ class ParameterChooser(QWidget):
         window_height = int(screen_height * 0.8)
         self.setGeometry(0, 0, window_width, window_height)
         self.setWindowTitle('The Great Drift')
+        self.draw_graph_2()
 
 
 
@@ -465,7 +467,7 @@ class ParameterChooser(QWidget):
         to_migrate = self.to_migrate_input.value()
         period = self.period_input.value()
         mu = self.mu_input.value()/100
-        step_size = self.step_size_input.value()
+        step_size = self.step_size_input.value()/100
         truc = self.truc_input.value()
         coupled = self.coupled_checkbox.isChecked()
         transfert_multiplier = self.transfert_multiplier_input.value()
@@ -548,6 +550,7 @@ app = QApplication([])
 window = ParameterChooser()
 window.show()
 app.exec()
+
 
 
 
