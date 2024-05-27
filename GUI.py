@@ -12,6 +12,7 @@ from PyQt6 import QtGui
 from PyQt6.QtCore import QSize, QThread,pyqtSignal
 
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
+import shutil
 
 
 
@@ -560,7 +561,6 @@ class ParameterChooser(QWidget):
         self.graph_progress.setValue(graph_progress)
 
     def save_plots(self):
-
         # Définir le nom du fichier
         file_name = 'last_simulation_parameters.npy'
 
@@ -574,7 +574,7 @@ class ParameterChooser(QWidget):
             # Le fichier n'existe pas
             return
 
-            # retrieve last simulation parameters
+        # retrieve last simulation parameters
         last_simulation_parameters = np.load(file_path, allow_pickle=True).item()
         period = last_simulation_parameters["period"]
 
@@ -585,7 +585,6 @@ class ParameterChooser(QWidget):
         # If a save directory was chosen (i.e., the user didn't cancel the dialog)
         if save_dir:
             # Save the current plots to the chosen directory
-            import shutil
 
             # Définir le chemin d'origine et de destination
             src_file1 = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Evolution_of_First_Move.pdf")

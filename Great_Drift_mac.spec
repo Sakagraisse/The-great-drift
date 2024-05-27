@@ -6,10 +6,17 @@ a = Analysis(['GUI.py'],
              pathex=[],
              binaries=[],
              datas=[],
-             hiddenimports=[],
+             hiddenimports=[
+                'matplotlib.backends.backend_pdf',
+                'matplotlib.backends.backend_agg',
+                'PyQt6.QtCore',
+                'PyQt6.QtGui',
+                'PyQt6.QtWidgets',
+                'PyQt6.QtPrintSupport'
+                ],
              hookspath=[],
              runtime_hooks=[],
-             excludes=['tkinter'],
+             excludes=[],
              cipher=block_cipher,
              noarchive=True)
 

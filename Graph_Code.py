@@ -22,7 +22,6 @@ def compute_graph_1(frame_x):
 
     data = frame_x_bins
     # transposing the data
-    # Transposer les données comme dans votre code
     data = data.T
 
     return data
@@ -189,7 +188,6 @@ def store_all_graphs(period):
     # Import frame_x from npy file
     dir_path = os.path.dirname(os.path.abspath(__file__))
     frame_x = np.load(os.path.join(dir_path, 'frame_x.npy'))
-
     data = compute_graph_1(frame_x)
 
     # Create a figure
@@ -224,7 +222,6 @@ def store_all_graphs(period):
     # Adjust layout for better visualization
     #plt.subplots_adjust(left=0.1, right=0.95, top=0.9, bottom=0.2)
     plt.subplots_adjust(left=0.1, right=0.8, top=0.85, bottom=0.2)
-    dir_path = os.path.dirname(os.path.abspath(__file__))
     plt.savefig(os.path.join(dir_path, 'Evolution_of_First_Move.pdf'), dpi=150)
 
     # Importer frame_a et frame_d à partir de fichiers npy
