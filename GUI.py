@@ -34,10 +34,17 @@ class SimulationThread(QThread):
         self.choice = choice
 
     def run(self):
-        SF.launch_sim_iterated(self.group_size, self.number_groups, self.num_interactions, self.period, self.mu, self.step_size, self.coupled, self.to_migrate, self.transfert_multiplier, self.truc, self.to_average,self.tracking,self.x_i_value,self.choice)
+        #SF.launch_sim_iterated(self.group_size, self.number_groups, self.num_interactions, self.period, self.mu, self.step_size, self.coupled, self.to_migrate, self.transfert_multiplier, self.truc, self.to_average,self.tracking,self.x_i_value,self.choice)
         #copy submitted parameters to a file named "last_simulation_parameters.npy"
         submitted_parameters = {"group_size": self.group_size, "number_groups": self.number_groups, "num_interactions": self.num_interactions, "period": self.period, "mu": self.mu, "step_size": self.step_size, "coupled": self.coupled, "to_migrate": self.to_migrate, "transfert_multiplier": self.transfert_multiplier, "truc": self.truc, "to_average": self.to_average, "tracking": self.tracking, "x_i_value": self.x_i_value, "choice": self.choice}
-        np.save('last_simulation_parameters.npy', submitted_parameters)
+        # Obtenir le chemin du répertoire du script actuel
+        dir_path = os.path.dirname(os.path.abspath(__file__))
+
+        # Créer le chemin complet du fichier
+        file_path = os.path.join(dir_path, 'last_simulation_parameters.npy')
+
+        # Enregistrer le fichier
+        np.save(file_path, submitted_parameters)
         print("Simulation finished")
 
 
@@ -361,13 +368,21 @@ class ParameterChooser(QWidget):
             pass
     def draw_graph_1(self):
 
-        if os.path.exists('last_simulation_parameters.npy'):
-            last_simulation_parameters = np.load('last_simulation_parameters.npy', allow_pickle=True).item()
-            period = last_simulation_parameters["period"]
+        # Définir le nom du fichier
+        file_name = 'last_simulation_parameters.npy'
 
-        else:
+        # Obtenir le chemin du répertoire du script actuel
+        dir_path = os.path.dirname(os.path.abspath(__file__))
+
+        # Créer le chemin complet du fichier
+        file_path = os.path.join(dir_path, file_name)
+
+        if not os.path.exists(file_path):
+            # Le fichier n'existe pas
             return
-        # Get the size of the canvas in pixels
+            # Get the size of the canvas in pixels
+
+        period = np.load(file_path, allow_pickle=True).item()["period"]
         canvas_size = self.canvas.size()
 
         # Convert the size to inches
@@ -397,7 +412,17 @@ class ParameterChooser(QWidget):
 
     def draw_graph_2(self):
 
-        if not os.path.exists('last_simulation_parameters.npy'):
+        # Définir le nom du fichier
+        file_name = 'last_simulation_parameters.npy'
+
+        # Obtenir le chemin du répertoire du script actuel
+        dir_path = os.path.dirname(os.path.abspath(__file__))
+
+        # Créer le chemin complet du fichier
+        file_path = os.path.join(dir_path, file_name)
+
+        if not os.path.exists(file_path):
+            # Le fichier n'existe pas
             return
         # Get the size of the canvas in pixels
         canvas_size = self.canvas.size()
@@ -406,7 +431,7 @@ class ParameterChooser(QWidget):
         canvas_size_inches = canvas_size.width() / self.canvas.figure.dpi, canvas_size.height() / self.canvas.figure.dpi
 
         # retrieve last simulation parameters
-        last_simulation_parameters = np.load('last_simulation_parameters.npy', allow_pickle=True).item()
+        last_simulation_parameters = np.load(file_path, allow_pickle=True).item()
         period = last_simulation_parameters["period"]
 
         # Use create_graph_2 from Graph_Code.py to create the graph with the size of the canvas
@@ -431,16 +456,26 @@ class ParameterChooser(QWidget):
         self.canvas.draw()
 
     def draw_graph_3(self):
-        if not os.path.exists('last_simulation_parameters.npy'):
+        # Définir le nom du fichier
+        file_name = 'last_simulation_parameters.npy'
+
+        # Obtenir le chemin du répertoire du script actuel
+        dir_path = os.path.dirname(os.path.abspath(__file__))
+
+        # Créer le chemin complet du fichier
+        file_path = os.path.join(dir_path, file_name)
+
+        if not os.path.exists(file_path):
+            # Le fichier n'existe pas
             return
-        # Get the size of the canvas in pixels
+            # Get the size of the canvas in pixels
         canvas_size = self.canvas.size()
 
         # Convert the size to inches
         canvas_size_inches = canvas_size.width() / self.canvas.figure.dpi, canvas_size.height() / self.canvas.figure.dpi
 
         # retrieve last simulation parameters
-        last_simulation_parameters = np.load('last_simulation_parameters.npy', allow_pickle=True).item()
+        last_simulation_parameters = np.load(file_path, allow_pickle=True).item()
         period = last_simulation_parameters["period"]
 
         # Use create_graph_3 from Graph_Code.py to create the graph with the size of the canvas
@@ -486,8 +521,16 @@ class ParameterChooser(QWidget):
             choice = 2
 
         #store all parameter on a dictionary and then store it in a file named, submitted parameters
+        #find path to store the file
+
         submitted_parameters = {"group_size": group_size, "number_groups": number_groups, "num_interactions": num_interactions, "to_migrate": to_migrate, "period": period, "mu": mu, "step_size": step_size, "truc": truc, "coupled": coupled, "transfert_multiplier": transfert_multiplier, "to_average": to_average, "tracking": tracking, "x_i_value": x_i_value, "choice": choice}
-        np.save('submitted_parameters.npy', submitted_parameters)
+        dir_path = os.path.dirname(os.path.abspath(__file__))
+
+        # Créer le chemin complet du fichier
+        file_path = os.path.join(dir_path, 'submitted_parameters.npy')
+
+        # Enregistrer le fichier
+        np.save(file_path, submitted_parameters)
 
 
         self.simulation_thread = SimulationThread(group_size, number_groups, num_interactions, period, mu, step_size,\
@@ -507,7 +550,7 @@ class ParameterChooser(QWidget):
         self.update_progress(100, 100)
         #show graph 2
 
-        self.draw_graph_2()
+        #self.draw_graph_2()
 
 
     def update_progress(self, simulation_progress, graph_progress):
@@ -516,11 +559,21 @@ class ParameterChooser(QWidget):
 
     def save_plots(self):
 
-        if not os.path.exists('last_simulation_parameters.npy'):
+        # Définir le nom du fichier
+        file_name = 'last_simulation_parameters.npy'
+
+        # Obtenir le chemin du répertoire du script actuel
+        dir_path = os.path.dirname(os.path.abspath(__file__))
+
+        # Créer le chemin complet du fichier
+        file_path = os.path.join(dir_path, file_name)
+
+        if not os.path.exists(file_path):
+            # Le fichier n'existe pas
             return
 
-        # retrieve last simulation parameters
-        last_simulation_parameters = np.load('last_simulation_parameters.npy', allow_pickle=True).item()
+            # retrieve last simulation parameters
+        last_simulation_parameters = np.load(file_path, allow_pickle=True).item()
         period = last_simulation_parameters["period"]
 
         GC.store_all_graphs(period)
