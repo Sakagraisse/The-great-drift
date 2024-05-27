@@ -6,16 +6,12 @@ import Graph_Code as GC
 import time
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QSpinBox, QLabel, QProgressBar,\
     QDoubleSpinBox, QCheckBox, QRadioButton, QButtonGroup, QGroupBox,QGridLayout, QHBoxLayout, \
-    QSizePolicy, QTextEdit, QFileDialog
+    QSizePolicy, QFileDialog
 
 from PyQt6 import QtGui
-
-from PyQt6.QtGui import QPixmap, QColor
-from PyQt6.QtCore import Qt, QSize, QProcess,QThread,pyqtSignal, QTimer
+from PyQt6.QtCore import QSize, QThread,pyqtSignal
 
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib import pyplot as plt
-from matplotlib.figure import Figure
 
 
 
@@ -353,12 +349,6 @@ class ParameterChooser(QWidget):
         self.setGeometry(0, 0, window_width, window_height)
         self.setWindowTitle('The Great Drift')
 
-        # check if is the required files are in the directory
-        if os.path.isfile('frame_a.npy') and os.path.isfile('frame_x.npy') and os.path.isfile('frame_d.npy'):
-            self.draw_graph_2()
-        else:
-            print("Error: Required files not found")
-
 
 
 
@@ -370,15 +360,18 @@ class ParameterChooser(QWidget):
         else :
             pass
     def draw_graph_1(self):
+
+        if os.path.exists('last_simulation_parameters.npy'):
+            last_simulation_parameters = np.load('last_simulation_parameters.npy', allow_pickle=True).item()
+            period = last_simulation_parameters["period"]
+
+        else:
+            return
         # Get the size of the canvas in pixels
         canvas_size = self.canvas.size()
 
         # Convert the size to inches
         canvas_size_inches = canvas_size.width() / self.canvas.figure.dpi, canvas_size.height() / self.canvas.figure.dpi
-
-        #retrieve last simulation parameters
-        last_simulation_parameters = np.load('last_simulation_parameters.npy', allow_pickle=True).item()
-        period = last_simulation_parameters["period"]
 
         # Use create_graph_1 from Graph_Code.py to create the graph with the size of the canvas
         self.fig1 = GC.create_graph_1(period, figsize=canvas_size_inches)
@@ -403,6 +396,9 @@ class ParameterChooser(QWidget):
 
 
     def draw_graph_2(self):
+
+        if not os.path.exists('last_simulation_parameters.npy'):
+            return
         # Get the size of the canvas in pixels
         canvas_size = self.canvas.size()
 
@@ -435,6 +431,8 @@ class ParameterChooser(QWidget):
         self.canvas.draw()
 
     def draw_graph_3(self):
+        if not os.path.exists('last_simulation_parameters.npy'):
+            return
         # Get the size of the canvas in pixels
         canvas_size = self.canvas.size()
 
@@ -517,6 +515,9 @@ class ParameterChooser(QWidget):
         self.graph_progress.setValue(graph_progress)
 
     def save_plots(self):
+
+        if not os.path.exists('last_simulation_parameters.npy'):
+            return
 
         # retrieve last simulation parameters
         last_simulation_parameters = np.load('last_simulation_parameters.npy', allow_pickle=True).item()
