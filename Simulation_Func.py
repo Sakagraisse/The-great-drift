@@ -389,7 +389,6 @@ def main_loop_iterated(x_i, d_i, a_i, fitnessIN, fitnessOUT, fitnessToT,store_in
 def loop_iterated(group_size, number_groups, num_interactions, period,mu, step_size,coupled, to_migrate, transfert_multiplier, truc,\
                     to_average,tracking, x_i_value, choice):
 
-
     for i in range(1, (to_average + 1), 1):
         frame_a, frame_x, frame_d, frame_fitnessToT,frame_surplus, index = create_frames(period,group_size,number_groups)
 
@@ -399,6 +398,7 @@ def loop_iterated(group_size, number_groups, num_interactions, period,mu, step_s
         frame_a, frame_x, frame_d = main_loop_iterated(x_i, d_i, a_i, fitnessIN, fitnessOUT, fitnessToT, store_interaction,surplus, \
                            frame_a, frame_x, frame_d, frame_fitnessToT,frame_surplus,\
                            group_size, number_groups, num_interactions, period, mu, step_size, coupled, to_migrate,transfert_multiplier, truc,tracking)
+
 
         if i == 1:
             frame_x_store = frame_x[index, :]
@@ -425,9 +425,9 @@ def launch_sim_iterated(group_size, number_groups, num_interactions, period, mu,
                     group_size, number_groups, num_interactions, period,mu, step_size,coupled, to_migrate, transfert_multiplier, truc,\
                     to_average,tracking,x_i_value,choice)
 
-    #for file in os.listdir(dir_path):
-        #if file.endswith(".npy"):
-            #os.remove(file)
+    for file in os.listdir(dir_path):
+        if file.endswith(".npy"):
+            os.remove(file)
 
     np.save(os.path.join(dir_path, 'frame_a.npy'), frame_a_store)
     np.save(os.path.join(dir_path, 'frame_x.npy'), frame_x_store)

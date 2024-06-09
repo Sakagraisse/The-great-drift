@@ -146,7 +146,7 @@ def create_graph_2(period,figsize):
     plt.ylabel("Proportion", fontsize=15, fontweight='bold')
 
     # Ajuster la position de la légende
-    plt.legend(["Unconditionally selfish", "De-escalators", "Quasi-de-escalator", "Ambiguous", "Perfect reciprocators", "Quasi-de-escalator", "Escalators",
+    plt.legend(["Unconditionally selfish", "De-escalators", "Quasi-de-escalator", "Ambiguous", "Perfect reciprocators", "Quasi-escalator", "Escalators",
                 "Unconditionally generous", "Other"], bbox_to_anchor=(1.05, 1), fontsize='x-small')
 
 
@@ -252,7 +252,7 @@ def store_all_graphs(period):
 
     # Ajuster la position de la légende
     plt.legend(["Unconditionally selfish", "De-escalators", "Quasi-de-escalator", "Ambiguous", "Perfect reciprocators",
-                "Quasi-de-escalator", "Escalators",
+                "Quasi-escalator", "Escalators",
                 "Unconditionally generous", "Other"], bbox_to_anchor=(1.05, 1), fontsize='x-small')
 
     plt.subplots_adjust(left=0.1, right=0.8, top=0.85,bottom=0.2)  # Ajuster la mise en page pour laisser de la place pour la légende

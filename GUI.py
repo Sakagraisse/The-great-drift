@@ -103,7 +103,7 @@ class ParameterChooser(QWidget):
 
         self.group_size_label = QLabel("Group Size")
         self.group_size_input = QSpinBox()
-        self.group_size_input.setRange(1, 240)
+        self.group_size_input.setRange(0, 240)
         self.group_size_input.setValue(24)  # Set default value
         self.group_size_input.setMinimumWidth(test)
         self.group_size_input.setSingleStep(12)
@@ -114,7 +114,7 @@ class ParameterChooser(QWidget):
 
         self.number_groups_label = QLabel("Number of Groups")
         self.number_groups_input = QSpinBox()
-        self.number_groups_input.setRange(1, 100)
+        self.number_groups_input.setRange(0, 100)
         self.number_groups_input.setSingleStep(10)
         self.number_groups_input.setValue(40)  # Set default value
         self.number_groups_input.setMinimumWidth(test)
@@ -158,7 +158,7 @@ class ParameterChooser(QWidget):
 
         self.step_size_label = QLabel("Step Size x 100")
         self.step_size_input = QDoubleSpinBox()
-        self.step_size_input.setRange(1, 100)
+        self.step_size_input.setRange(0, 100)
         self.step_size_input.setSingleStep(0.5)
         self.step_size_input.setValue(2.5)  # Set default value
         self.step_size_input.setMinimumWidth(test)
