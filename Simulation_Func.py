@@ -34,9 +34,8 @@ def create_initial_pop(group_size, number_groups, num_interactions,transfert_mul
     number_groups (int): The total number of groups in the population.
     num_interactions (int): The number of interactions each player has.
     """
-    delta = 1 - (1/num_interactions)
-    equilibrium_degree = (delta * (1 - transfert_multiplier) + sqrt((delta ** 2) * ((1 - transfert_multiplier) ** 2) + 4 * transfert_multiplier * delta)) / (2 * transfert_multiplier * delta)
-    a_hat = 1 - equilibrium_degree
+
+
 
     if choice == 0:
         x_i = np.ones((number_groups, group_size), dtype=np.float64)*x_i_value
@@ -48,6 +47,17 @@ def create_initial_pop(group_size, number_groups, num_interactions,transfert_mul
         a_i = np.zeros((number_groups, group_size), dtype=np.float64)
         d_i = np.zeros((number_groups, group_size), dtype=np.float64)
     elif choice == 2:
+        if num_interactions == 1:
+            print("The equilibrium degree is not defined for one interaction")
+            a_hat = 1
+        else:
+            delta = 1 - (1 / num_interactions)
+            equilibrium_degree = (delta * (1 - transfert_multiplier) + sqrt(
+                (delta ** 2) * ((1 - transfert_multiplier) ** 2) + 4 * transfert_multiplier * delta)) / (
+                                         2 * transfert_multiplier * delta)
+            a_hat = 1 - equilibrium_degree
+
+
         x_i = np.ones((number_groups, group_size), dtype=np.float64)*x_i_value
         #a_i is a_hat
         a_i = np.ones((number_groups, group_size), dtype=np.float64) * a_hat
