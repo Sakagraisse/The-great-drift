@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
 # Définir la fonction
 def f(d, delta, x_tilde, b):
@@ -55,4 +56,14 @@ plt.xlabel('$d$')
 plt.ylabel('$f(d, \delta, \\tilde{x}, b)$')
 plt.grid(False)
 plt.legend()
-plt.show()
+# Get the directory of the current script
+dir_path = os.path.dirname(os.path.abspath(__file__))
+
+# Create the path to the directory where you want to save the file
+save_dir = os.path.join(dir_path, 'Graphs', 'Graph 1')
+
+# Ensure the directory exists
+os.makedirs(save_dir, exist_ok=True)
+
+# Save the figure
+plt.savefig(os.path.join(save_dir, 'g2 v b.pdf'))

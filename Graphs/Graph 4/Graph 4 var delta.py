@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap, TwoSlopeNorm
+import os
 
 
 def f(h, g, delta, x_tilde, b):
@@ -43,7 +44,7 @@ plt.ylabel('d')
 
 # Ajouter la courbe de niveau pour f(a, d) = 0
 zero_contour = plt.contour(h, g, z, levels=[0], colors='black', linewidths=1.5)
-plt.clabel(zero_contour, fmt='f(a,d)=0, b = 2', inline=True)
+plt.clabel(zero_contour, fmt='f(a,d)=0, delta = 0.96', inline=True)
 
 delta = 0.03
 x_tilde = 0.96
@@ -69,4 +70,13 @@ z = f(h, g, delta, x_tilde, b)
 zero_contour = plt.contour(h, g, z, levels=[0], colors='black', linewidths=1.5)
 plt.clabel(zero_contour, fmt='f(a,d)=0, delta = 0.7', inline=True)
 
-plt.show()
+dir_path = os.path.dirname(os.path.abspath(__file__))
+
+# Create the path to the directory where you want to save the file
+save_dir = os.path.join(dir_path, 'Graphs', 'Graph 1')
+
+# Ensure the directory exists
+os.makedirs(save_dir, exist_ok=True)
+
+# Save the figure
+plt.savefig(os.path.join(save_dir, 'g1 v delta.pdf'))

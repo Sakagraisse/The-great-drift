@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
 # Définir la fonction
 def f(d, delta, x_tilde, b):
@@ -20,11 +21,11 @@ plt.figure(figsize=(8, 6))
 # Fonction pour annoter les lignes
 def annotate_line(d_values, f_values, b, ax):
     idx = np.argmax(d_values > 0.8)  # Trouver l'index où d est environ 0.5
-    ax.annotate(f'b={b}', xy=(d_values[idx], f_values[idx]), xytext=(5, 5),
+    ax.annotate(f'x={b}', xy=(d_values[idx], f_values[idx]), xytext=(5, 5),
                 textcoords='offset points', color='black', fontsize=10,
                 bbox=dict(facecolor='white', edgecolor='black', alpha=0.7))
 
-x_tilde = 0.03
+x_tilde = 0.96
 # Calculer et tracer pour b = 2
 f_values = f(d_values, delta, x_tilde, b)
 positive_values = np.ma.masked_less_equal(f_values, 0)
@@ -33,6 +34,14 @@ plt.plot(d_values, positive_values, 'b', label='f(d) > 0$')
 plt.plot(d_values, negative_values, 'r', label='f(d) < 0$')
 annotate_line(d_values, f_values, x_tilde, plt.gca())
 
+x_tilde = 0.04
+# Calculer et tracer pour b = 2
+f_values = f(d_values, delta, x_tilde, b)
+positive_values = np.ma.masked_less_equal(f_values, 0)
+negative_values = np.ma.masked_greater(f_values, 0)
+plt.plot(d_values, positive_values, 'b', label='f(d) > 0$')
+plt.plot(d_values, negative_values, 'r', label='f(d) < 0$')
+annotate_line(d_values, f_values, x_tilde, plt.gca())
 # Calculer et tracer pour b = 3
 x_tilde = 0.3
 f_values = f(d_values, delta, x_tilde, b)
@@ -56,4 +65,14 @@ plt.xlabel('$d$')
 plt.ylabel('$f(d, \delta, \\tilde{x}, b)$')
 plt.grid(False)
 plt.legend()
-plt.show()
+# Get the directory of the current script
+dir_path = os.path.dirname(os.path.abspath(__file__))
+
+# Create the path to the directory where you want to save the file
+save_dir = os.path.join(dir_path, 'Graphs', 'Graph 1')
+
+# Ensure the directory exists
+os.makedirs(save_dir, exist_ok=True)
+
+# Save the figure
+plt.savefig(os.path.join(save_dir, 'g2 v x.pdf'))
