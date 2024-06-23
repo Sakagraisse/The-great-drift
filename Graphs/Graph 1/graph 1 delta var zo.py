@@ -5,8 +5,15 @@ import os
 
 # Définir la fonction
 def f(a, d, delta, x_tilde, b):
-    term1 = (1 - b * (d - a)) * delta * (1 - delta * (d ** 2 - a * d) - x_tilde * (d - a) * (1 - delta) + a)
-    term2 = (1 - b * delta * (d - a)) * (1 - delta * (d ** 2 - a * d) - x_tilde * (1 - delta) + a * delta)
+    term1_numerator = a * delta * (1 - b * (d - a)) * (
+                (1 - delta * d * (d - a)) - (x_tilde * (d - a) * (1 - delta) + a))
+    term2_numerator = a * (1 - b * delta * (d - a)) * ((1 - delta * d * (d - a)) - (x_tilde * (1 - delta) + a * delta))
+
+    denominator = 2 * (1 - delta) * (1 - delta * d * (d - a)) * (1 - delta * (d - a) ** 2)
+
+    term1 = term1_numerator / denominator
+    term2 = term2_numerator / denominator
+
     return term1 + term2
 
 # Paramètres

@@ -4,9 +4,10 @@ import os
 
 # Définir la fonction
 def f(d, delta, x_tilde, b):
-    term1 = d * (delta * (1 - b * d) * (x_tilde * d * (1 - delta)) + (1 - b * delta * d) * (x_tilde * (1 - delta)))
-    return term1
-
+    numerator = d * x_tilde * (1 + delta - 2 * b * delta * d)
+    denominator = 2 * (1 - delta * d**2)
+    result = numerator / denominator
+    return result
 # Paramètres donnés
 delta = 0.96
 x_tilde = 0.96
@@ -71,7 +72,7 @@ plt.legend()
 dir_path = os.path.dirname(os.path.abspath(__file__))
 
 # Create the path to the directory where you want to save the file
-save_dir = os.path.join(dir_path, 'Graphs', 'Graph 1')
+save_dir = os.path.join(dir_path, 'Graphs', 'Graph 2')
 
 # Ensure the directory exists
 os.makedirs(save_dir, exist_ok=True)

@@ -4,10 +4,10 @@ from matplotlib.colors import ListedColormap, TwoSlopeNorm
 
 
 def f(h, g, delta, x_tilde, b):
-    term1 = (1 - h + g) * (delta * (1 - b) * (x_tilde * (1 - delta)) + (1 - b * delta) * (x_tilde * (1 - delta)))
-    term2 = (1 - 2 * b * delta + delta) * (0 - g - delta * (-g))
-    return term1 + term2
-
+    numerator = (1 + delta - 2 * b * delta) * ((1 - h) * x_tilde + g * (x_tilde - 1))
+    denominator = 2 * (1 - delta) * (1 - delta * (h - g))
+    result = numerator / denominator
+    return result
 
 delta = 0.96
 x_tilde = 0.96

@@ -5,9 +5,10 @@ import os
 
 
 def f(h, g, delta, x_tilde, b):
-    term1 = (1 - h + g) * (delta * (1 - b) * (x_tilde * (1 - delta)) + (1 - b * delta) * (x_tilde * (1 - delta)))
-    term2 = (1 - 2 * b * delta + delta) * (0 - g - delta * (-g))
-    return term1 + term2
+    numerator = (1 + delta - 2 * b * delta) * ((1 - h) * x_tilde + g * (x_tilde - 1))
+    denominator = 2 * (1 - delta) * (1 - delta * (h - g))
+    result = numerator / denominator
+    return result
 
 
 delta = 0.96
@@ -73,7 +74,7 @@ plt.clabel(zero_contour, fmt='f(a,d)=0, x_tilde = 0.7', inline=True)
 dir_path = os.path.dirname(os.path.abspath(__file__))
 
 # Create the path to the directory where you want to save the file
-save_dir = os.path.join(dir_path, 'Graphs', 'Graph 1')
+save_dir = os.path.join(dir_path, 'Graphs', 'Graph 4')
 
 # Ensure the directory exists
 os.makedirs(save_dir, exist_ok=True)
