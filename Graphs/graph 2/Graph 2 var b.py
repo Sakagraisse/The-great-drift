@@ -21,7 +21,7 @@ plt.figure(figsize=(8, 6))
 
 # Fonction pour annoter les lignes
 def annotate_line(d_values, f_values, b, ax):
-    idx = np.argmax(d_values > 0.8)  # Trouver l'index où d est environ 0.5
+    idx = np.argmax(d_values > 0.9)  # Trouver l'index où d est environ 0.5
     ax.annotate(f'b={b}', xy=(d_values[idx], f_values[idx]), xytext=(5, 5),
                 textcoords='offset points', color='black', fontsize=10,
                 bbox=dict(facecolor='white', edgecolor='black', alpha=0.7))
@@ -31,8 +31,8 @@ b = 2
 f_values = f(d_values, delta, x_tilde, b)
 positive_values = np.ma.masked_less_equal(f_values, 0)
 negative_values = np.ma.masked_greater(f_values, 0)
-plt.plot(d_values, positive_values, 'b', label='f(d) > 0$')
-plt.plot(d_values, negative_values, 'r', label='f(d) < 0$')
+plt.plot(d_values, positive_values, 'b', label='f(d) > 0')
+plt.plot(d_values, negative_values, 'r', label='f(d) < 0')
 annotate_line(d_values, f_values, b, plt.gca())
 
 # Calculer et tracer pour b = 3
@@ -53,11 +53,18 @@ plt.plot(d_values, positive_values, 'b')
 plt.plot(d_values, negative_values, 'r')
 annotate_line(d_values, f_values, b, plt.gca())
 
-plt.title('Graph of the function $f(d, \delta, \\tilde{x}, b)$')
 plt.xlabel('$d$')
-plt.ylabel('$f(d, \delta, \\tilde{x}, b)$')
+plt.ylabel('f(d)')
 plt.grid(False)
 plt.legend()
+
+plt.tick_params(axis='both', which='major', labelsize=14)
+
+# Increase the size of the axis labels
+plt.xlabel('a', fontsize=16)
+plt.ylabel('d', fontsize=16)
+
+
 # Get the directory of the current script
 dir_path = os.path.dirname(os.path.abspath(__file__))
 
