@@ -142,7 +142,7 @@ class ParameterChooser(QWidget):
         self.to_migrate_input = QSpinBox()
         self.to_migrate_input.setRange(0, 240)
         self.to_migrate_input.setValue(8)  # Set default value
-        self.to_migrate_input.setSingleStep(8)
+        self.to_migrate_input.setSingleStep(1)
         self.to_migrate_input.setMinimumWidth(test)
         self.base_parameters_layout.addWidget(self.to_migrate_label, 2, 0)
         self.base_parameters_layout.addWidget(self.to_migrate_input, 2, 1)

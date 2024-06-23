@@ -1,8 +1,6 @@
-import sys
 import os
 import numpy as np
 import numba as nb
-import time
 from math import sqrt
 ################
 # Create base player
@@ -19,7 +17,6 @@ def create_frames(period, group_size, number_groups):
 
     # Initialize the index array
     index = np.round(np.linspace(0, frame_x.shape[0]-1, 76)).astype(np.int64)
-
 
     return frame_a, frame_x, frame_d,frame_fitnessToT, frame_surplus,index
 
