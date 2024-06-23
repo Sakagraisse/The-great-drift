@@ -45,28 +45,34 @@ ax.set_ylim(0, 1)
 # Make the numbers on the axes bigger
 ax.tick_params(axis='both', labelsize=15)  # Change the size of the numbers on the x and y axes to 15
 
+ax.set_xlabel('Most recent transfer (partner)', fontsize=16)
 # Create a secondary y-axis and set its label to 'd'
 ax2 = ax.twinx()
-ax2.set_ylabel('d')
+# Set the y-label for the right y-axis, increase its size, adjust its position, and rotate it by 90 degrees
+ax2.set_ylabel('d', fontsize=20, rotation=0)
+ax2.yaxis.set_label_coords(1.07, -0.05)
+
+ax.set_xlabel('a', fontsize=20, rotation=0)
+ax.xaxis.set_label_coords(-0.07, -0.05)
 
 ax2.tick_params(axis='both', labelsize=15)  # Change the size of the numbers on the x and y axes to 15
 
 ax2.set_xlim(0, 1)
 ax2.set_ylim(0, 1)
 
-ax.set_ylabel('a', fontsize=20, rotation=0)
+ax.set_ylabel('Current transfer (focal)', fontsize=20, rotation=90)
 ax.yaxis.set_label_coords(-0.07, 0.45)
 
-# Set the y-label for the right y-axis, increase its size, adjust its position, and rotate it by 90 degrees
-ax2.set_ylabel('d', fontsize=20, rotation=0)
-ax2.yaxis.set_label_coords(1.07, 0.5)
+
 
 # Move the legend to the upper right corner outside the plot
 ax.legend(["Unconditionally \nselfish", "De-escalators", "Quasi-\nde-escalator", "Ambiguous", "Perfect \nreciprocators",
                 "Quasi-\nescalator", "Escalators",
                 "Unconditionally \ngenerous"], bbox_to_anchor=(1.11, 1), fontsize=11.5)
 
-plt.subplots_adjust(left=0.07, right=0.73, top=0.95,bottom=0.05)
+
+
+plt.subplots_adjust(left=0.1, right=0.73, top=0.95,bottom=0.1)
 
 dir_path = os.path.dirname(os.path.abspath(__file__))
 file_path = os.path.join(dir_path, 'type_of_player_quasi.pdf')
