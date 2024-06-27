@@ -38,24 +38,17 @@ class SimulationThread(QThread):
         SF.launch_sim_iterated(self.group_size, self.number_groups, self.num_interactions, self.period, self.mu, self.step_size, self.coupled, self.to_migrate, self.transfert_multiplier, self.truc, self.to_average,self.tracking,self.x_i_value,self.choice)
         #copy submitted parameters to a file named "last_simulation_parameters.npy"
         submitted_parameters = {"group_size": self.group_size, "number_groups": self.number_groups, "num_interactions": self.num_interactions, "period": self.period, "mu": self.mu, "step_size": self.step_size, "coupled": self.coupled, "to_migrate": self.to_migrate, "transfert_multiplier": self.transfert_multiplier, "truc": self.truc, "to_average": self.to_average, "tracking": self.tracking, "x_i_value": self.x_i_value, "choice": self.choice}
-        # Obtenir le chemin du répertoire du script actuel
         dir_path = os.path.dirname(os.path.abspath(__file__))
-
-        # Créer le chemin complet du fichier
         file_path = os.path.join(dir_path, 'last_simulation_parameters.npy')
-
-        # Enregistrer le fichier
         np.save(file_path, submitted_parameters)
         print("Simulation finished")
 
 
 class ProgressThread(QThread):
-    progress_signal = pyqtSignal(int, int)  # Signal with two integer parameters
-
+    progress_signal = pyqtSignal(int, int)
     def __init__(self, tracking):
         QThread.__init__(self)
         self.tracking = tracking
-
 
     def run(self):
         while True:
@@ -64,7 +57,7 @@ class ProgressThread(QThread):
 class AspectRatioLabel(QLabel):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.aspect_ratio = 1.25 # Set the desired aspect ratio here
+        self.aspect_ratio = 1.25 # Set the desired aspect ratio
 
     def resizeEvent(self, event):
         w = self.width()
@@ -80,21 +73,14 @@ class ParameterChooser(QWidget):
         screen_width = screen_geo.width()
         screen_height = screen_geo.height()
 
-        
-        
-
         # Create a QHBoxLayout
         self.main_layout = QHBoxLayout()
 
         # Create a QVBoxLayout for the left column
         self.left_column_layout = QVBoxLayout()
 
-        # left size
-
-        #left size group base parameter
-
         self.base_parameters_group = QGroupBox("Base Parameters")
-        #si sur mac test est 0.1 si sur windows test est 0.15  
+        #if on mac, set the width of the spinbox to 10% of the width of the group box
         if sys.platform == "darwin":
             test = int(self.base_parameters_group.width() * 0.1)
         elif sys.platform == "win32":
@@ -104,7 +90,7 @@ class ParameterChooser(QWidget):
         self.group_size_label = QLabel("Group Size")
         self.group_size_input = QSpinBox()
         self.group_size_input.setRange(0, 240)
-        self.group_size_input.setValue(24)  # Set default value
+        self.group_size_input.setValue(24)
         self.group_size_input.setMinimumWidth(test)
         self.group_size_input.setSingleStep(12)
 
@@ -116,7 +102,7 @@ class ParameterChooser(QWidget):
         self.number_groups_input = QSpinBox()
         self.number_groups_input.setRange(0, 100)
         self.number_groups_input.setSingleStep(10)
-        self.number_groups_input.setValue(40)  # Set default value
+        self.number_groups_input.setValue(40)
         self.number_groups_input.setMinimumWidth(test)
         self.base_parameters_layout.addWidget(self.number_groups_label, 1, 0)
         self.base_parameters_layout.addWidget(self.number_groups_input, 1, 1)
@@ -124,7 +110,7 @@ class ParameterChooser(QWidget):
         self.num_interactions_label = QLabel("Number of Interactions")
         self.num_interactions_input = QSpinBox()
         self.num_interactions_input.setRange(1, 1000)
-        self.num_interactions_input.setValue(100)  # Set default value
+        self.num_interactions_input.setValue(100)
         self.num_interactions_input.setMinimumWidth(test)
         self.base_parameters_layout.addWidget(self.num_interactions_label, 0, 2)
         self.base_parameters_layout.addWidget(self.num_interactions_input, 0, 3)
@@ -132,7 +118,7 @@ class ParameterChooser(QWidget):
         self.period_label = QLabel("Number of Periods")
         self.period_input = QSpinBox()
         self.period_input.setRange(100, 200000)
-        self.period_input.setValue(3000)  # Set default value
+        self.period_input.setValue(3000)
         self.period_input.setSingleStep(500)
         self.period_input.setMinimumWidth(test)
         self.base_parameters_layout.addWidget(self.period_label, 1, 2)
@@ -141,7 +127,7 @@ class ParameterChooser(QWidget):
         self.to_migrate_label = QLabel("Individuals to Migrate")
         self.to_migrate_input = QSpinBox()
         self.to_migrate_input.setRange(0, 240)
-        self.to_migrate_input.setValue(8)  # Set default value
+        self.to_migrate_input.setValue(8)
         self.to_migrate_input.setSingleStep(1)
         self.to_migrate_input.setMinimumWidth(test)
         self.base_parameters_layout.addWidget(self.to_migrate_label, 2, 0)
@@ -151,7 +137,7 @@ class ParameterChooser(QWidget):
         self.mu_input = QDoubleSpinBox()
         self.mu_input.setRange(0, 100)
         self.mu_input.setSingleStep(0.5)
-        self.mu_input.setValue(2)  # Set default value
+        self.mu_input.setValue(2)
         self.mu_input.setMinimumWidth(test)
         self.base_parameters_layout.addWidget(self.mu_label, 3, 0)
         self.base_parameters_layout.addWidget(self.mu_input, 3, 1)
@@ -160,7 +146,7 @@ class ParameterChooser(QWidget):
         self.step_size_input = QDoubleSpinBox()
         self.step_size_input.setRange(0, 100)
         self.step_size_input.setSingleStep(0.5)
-        self.step_size_input.setValue(2.5)  # Set default value
+        self.step_size_input.setValue(2.5)
         self.step_size_input.setMinimumWidth(test)
         self.base_parameters_layout.addWidget(self.step_size_label, 2, 2)
         self.base_parameters_layout.addWidget(self.step_size_input, 2, 3)
@@ -169,7 +155,7 @@ class ParameterChooser(QWidget):
         self.truc_input = QDoubleSpinBox()
         self.truc_input.setRange(0, 1.00)
         self.truc_input.setSingleStep(0.01)
-        self.truc_input.setValue(0.5)  # Set default value
+        self.truc_input.setValue(0.5)
         self.truc_input.setMinimumWidth(test)
         self.base_parameters_layout.addWidget(self.truc_label, 3, 2)
         self.base_parameters_layout.addWidget(self.truc_input, 3, 3)
@@ -178,7 +164,7 @@ class ParameterChooser(QWidget):
         self.transfert_multiplier_input = QDoubleSpinBox()
         self.transfert_multiplier_input.setRange(0, 100)
         self.transfert_multiplier_input.setSingleStep(0.1)
-        self.transfert_multiplier_input.setValue(2)  # Set default value
+        self.transfert_multiplier_input.setValue(2)
         self.transfert_multiplier_input.setMinimumWidth(test)
         self.base_parameters_layout.addWidget(self.transfert_multiplier_label, 5, 0)
         self.base_parameters_layout.addWidget(self.transfert_multiplier_input, 5, 1)
@@ -192,12 +178,8 @@ class ParameterChooser(QWidget):
         self.base_parameters_layout.addWidget(self.x_i_value_label, 5, 2)
         self.base_parameters_layout.addWidget(self.x_i_value_input, 5, 3)
 
-
-        # Create a checkbox for "Coupled"
         self.coupled_checkbox = QCheckBox("Coupled")
-        self.coupled_checkbox.setChecked(True)  # Set "Coupled" as the default value
-
-        # Add the checkbox to the layout
+        self.coupled_checkbox.setChecked(True)
         self.base_parameters_layout.addWidget(self.coupled_checkbox, 6, 1)
 
         self.number_average_label = QLabel("Number of Simulations to Average")
@@ -206,17 +188,14 @@ class ParameterChooser(QWidget):
         self.number_average_input.setValue(5)
         self.number_average_input.setSingleStep(1)
 
-        # Create a QVBoxLayout for the QGroupBox
+
         self.base_parameters_box_layout = QVBoxLayout()
 
-        # Add the QGridLayout to the QVBoxLayout
         self.base_parameters_box_layout.addLayout(self.base_parameters_layout)
 
-        # Add the QSpinBox to the QVBoxLayout
         self.base_parameters_box_layout.addWidget(self.number_average_label)
         self.base_parameters_box_layout.addWidget(self.number_average_input)
 
-        # Set the QVBoxLayout as the layout for the QGroupBox
         self.base_parameters_group.setLayout(self.base_parameters_box_layout)
 
         #create a group box for intial conditions
@@ -247,8 +226,6 @@ class ParameterChooser(QWidget):
         #set the layout for the group box
         self.initial_conditions_group.setLayout(self.initial_conditions_layout)
 
-
-
         # create a group for the graph buttons
         self.graph_group = QGroupBox("Graphs")
         # create 2 by 2 grid layout
@@ -271,13 +248,10 @@ class ParameterChooser(QWidget):
         self.save_all_button.clicked.connect(self.save_plots)
         self.graph_grid_layout.addWidget(self.save_all_button, 1, 1)
 
-
         self.graph_group.setLayout(self.graph_grid_layout)
-
 
         #create a groupbox for Simulation
         self.simulation_group = QGroupBox("Simulation")
-        # Create a 2x1 grid layout for the submit and stop buttons
         self.submit_stop_layout = QGridLayout()
 
         # Create a QPushButton for the submit button
@@ -293,8 +267,6 @@ class ParameterChooser(QWidget):
         self.left_column_layout.addWidget(self.graph_group)
         self.left_column_layout.addWidget(self.initial_conditions_group)
         self.left_column_layout.addWidget(self.simulation_group)
-
-
 
         # Add the left column layout to the main layout
         self.main_layout.addLayout(self.left_column_layout)
@@ -339,12 +311,11 @@ class ParameterChooser(QWidget):
         self.graph_group.setLayout(self.graph_layout)
 
         self.right_column_layout.addWidget(self.graph_group)
-        # Donner la priorité à la groupbox "Graph Display"
+
         self.right_column_layout.setStretchFactor(self.graph_group, 1)
 
-        # Réduire la priorité de la groupbox "Progress"
         self.right_column_layout.setStretchFactor(self.progress_group, 0)
-        #add the left column layout to the main layout
+
         self.main_layout.addLayout(self.right_column_layout)
 
         # Set the main layout as the layout for the window
@@ -358,30 +329,23 @@ class ParameterChooser(QWidget):
         self.setWindowTitle('The Great Drift')
 
 
-
-
-
-        # Create
+    #Avoid x_i_value to be 1 when the eq degree of escallation radio button is checked
     def check_x_i_value(self):
         if self.x_i_value_input.value() == 1:
             self.x_i_value_input.setValue(0.95)
         else :
             pass
+
+    # function to draw the first graph
     def draw_graph_1(self):
 
-        # Définir le nom du fichier
         file_name = 'last_simulation_parameters.npy'
 
-        # Obtenir le chemin du répertoire du script actuel
         dir_path = os.path.dirname(os.path.abspath(__file__))
-
-        # Créer le chemin complet du fichier
         file_path = os.path.join(dir_path, file_name)
 
         if not os.path.exists(file_path):
-            # Le fichier n'existe pas
             return
-            # Get the size of the canvas in pixels
 
         period = np.load(file_path, allow_pickle=True).item()["period"]
         canvas_size = self.canvas.size()
@@ -411,20 +375,17 @@ class ParameterChooser(QWidget):
         self.canvas.draw()
 
 
+    # function to draw the second graph
     def draw_graph_2(self):
 
-        # Définir le nom du fichier
+
         file_name = 'last_simulation_parameters.npy'
-
-        # Obtenir le chemin du répertoire du script actuel
         dir_path = os.path.dirname(os.path.abspath(__file__))
-
-        # Créer le chemin complet du fichier
         file_path = os.path.join(dir_path, file_name)
 
         if not os.path.exists(file_path):
-            # Le fichier n'existe pas
             return
+
         # Get the size of the canvas in pixels
         canvas_size = self.canvas.size()
 
@@ -456,20 +417,18 @@ class ParameterChooser(QWidget):
         # Draw the canvas
         self.canvas.draw()
 
+
+    # function to draw the third graph
     def draw_graph_3(self):
-        # Définir le nom du fichier
+
         file_name = 'last_simulation_parameters.npy'
-
-        # Obtenir le chemin du répertoire du script actuel
         dir_path = os.path.dirname(os.path.abspath(__file__))
-
-        # Créer le chemin complet du fichier
         file_path = os.path.join(dir_path, file_name)
 
         if not os.path.exists(file_path):
-            # Le fichier n'existe pas
             return
-            # Get the size of the canvas in pixels
+
+        # Get the size of the canvas in pixels
         canvas_size = self.canvas.size()
 
         # Convert the size to inches
@@ -500,6 +459,8 @@ class ParameterChooser(QWidget):
         # Draw the canvas
         self.canvas.draw()
 
+
+    # function to submit the parameters and launch the simulation from  Simulation_Func.py
     def submit(self):
         group_size = self.group_size_input.value()
         number_groups = self.number_groups_input.value()
@@ -522,17 +483,12 @@ class ParameterChooser(QWidget):
             choice = 2
 
         #store all parameter on a dictionary and then store it in a file named, submitted parameters
-        #find path to store the file
-
         submitted_parameters = {"group_size": group_size, "number_groups": number_groups, "num_interactions": num_interactions, "to_migrate": to_migrate, "period": period, "mu": mu, "step_size": step_size, "truc": truc, "coupled": coupled, "transfert_multiplier": transfert_multiplier, "to_average": to_average, "tracking": tracking, "x_i_value": x_i_value, "choice": choice}
         dir_path = os.path.dirname(os.path.abspath(__file__))
-
-        # Créer le chemin complet du fichier
         file_path = os.path.join(dir_path, 'submitted_parameters.npy')
-
-        # Enregistrer le fichier
         np.save(file_path, submitted_parameters)
 
+        # Launch the simulation in a separate thread
         if not hasattr(self, 'simulation_thread') or not self.simulation_thread.isRunning():
             self.simulation_thread = SimulationThread(group_size, number_groups, num_interactions, period, mu, step_size,\
                                                       coupled, to_migrate, transfert_multiplier, truc, to_average,tracking,x_i_value,choice)
@@ -545,6 +501,8 @@ class ParameterChooser(QWidget):
         else:
             print("SimulationThread is already running")
 
+
+    # function to be called when the simulation is finished
     def on_simulation_finished(self):
         # This method will be called when the simulation is finished
         print("Simulation finished")
@@ -552,41 +510,34 @@ class ParameterChooser(QWidget):
         print("Progress thread terminated")
         self.update_progress(100, 100)
         #show graph 2
-
         self.draw_graph_2()
 
-
+    # function to update the progress bars
     def update_progress(self, simulation_progress, graph_progress):
         self.simulation_progress.setValue(simulation_progress)  # Update the simulation progress bar with the current progress
         self.graph_progress.setValue(graph_progress)
 
+    # function to save the plots
     def save_plots(self):
-        # Définir le nom du fichier
+
         file_name = 'last_simulation_parameters.npy'
-
-        # Obtenir le chemin du répertoire du script actuel
         dir_path = os.path.dirname(os.path.abspath(__file__))
-
-        # Créer le chemin complet du fichier
         file_path = os.path.join(dir_path, file_name)
 
         if not os.path.exists(file_path):
-            # Le fichier n'existe pas
             return
 
         # retrieve last simulation parameters
         last_simulation_parameters = np.load(file_path, allow_pickle=True).item()
         period = last_simulation_parameters["period"]
-
         GC.store_all_graphs(period)
+
         # Open a QFileDialog to choose the save directory
         save_dir = QFileDialog.getExistingDirectory(self, "Select Directory")
 
         # If a save directory was chosen (i.e., the user didn't cancel the dialog)
         if save_dir:
             # Save the current plots to the chosen directory
-
-            # Définir le chemin d'origine et de destination
             src_file1 = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Evolution_of_First_Move.pdf")
             dest_file1 = os.path.join(save_dir, "Evolution_of_First_Move.pdf")
 
@@ -596,7 +547,7 @@ class ParameterChooser(QWidget):
             src_file3 = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Surplus_per_generation.pdf")
             dest_file3 = os.path.join(save_dir, "Surplus_per_generation.pdf")
 
-            # Copier les fichiers
+            # Copy the files to the chosen directory
             shutil.copy(src_file1, dest_file1)
             shutil.copy(src_file2, dest_file2)
             shutil.copy(src_file3, dest_file3)
@@ -608,9 +559,13 @@ class ParameterChooser(QWidget):
             print(f"Plots saved to {save_dir}")
 
 
+# Create the application
 app = QApplication([])
+# Create the main window
 window = ParameterChooser()
+# Show the window
 window.show()
+# Execute the application
 app.exec()
 
 

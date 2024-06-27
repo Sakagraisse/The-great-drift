@@ -1,19 +1,12 @@
-import sys
 import os
-
-
 import numpy as np
-
 import matplotlib.pyplot as plt
-#import matplotlib
 import numba as nb
-#matplotlib.use('Agg')
 
-# calaculus for graph 1
 
 @nb.jit(nopython=True)
 def compute_graph_1(frame_x):
-
+    """Compute the density values for the first graph from the frame_x array"""
     frame_x_bins = np.zeros((76, 10))
     bins = np.arange(0, 1.1, 0.1)
     for i in range(0, 76, 1):
@@ -21,16 +14,17 @@ def compute_graph_1(frame_x):
         frame_x_bins[i, :] = hist
 
     data = frame_x_bins
-    # transposing the data
     data = data.T
 
     return data
 
 def create_graph_1(period,figsize):
+    """ Create the first graph showing the evolution of the first move """
     # Import frame_x from npy file
     dir_path = os.path.dirname(os.path.abspath(__file__))
     frame_x = np.load(os.path.join(dir_path, 'frame_x.npy'))
 
+    # Compute the density for the graph
     data = compute_graph_1(frame_x)
 
     # Create a figure
@@ -54,7 +48,6 @@ def create_graph_1(period,figsize):
     custom_ticks = np.round(custom_ticks, 2)
     plt.yticks(np.arange(-0.5, data.shape[0]), custom_ticks)
 
-
     # Customize y-axis tick rotation
     plt.gca().yaxis.set_tick_params(rotation=90)
 
@@ -71,15 +64,19 @@ def create_graph_1(period,figsize):
 
 @nb.jit(nopython=True)
 def function_1(a,b):
+    """function to compute the type of ambigous strategies"""
     y = a/(a+1-b)
     return y
 
 @nb.jit(nopython=True)
 def compute_graph_2(frame_a, frame_d):
+    """Compute the barchart values for the second graph from the frame_a and frame_d arrays"""
+    # Create an array to store the values of the barchart
+    frame_a_bins = np.zeros((76, 9))
 
-    # Créer un tableau de 75 colonnes et 6 lignes
-    frame_a_bins = np.zeros((76, 9))  # Increase the size of the array to accommodate the new categories
+    # Loop over the generations
     for j in range(0, 76, 1):
+        # Loop over the individuals to find the type of strategy
         for i in range(0, len(frame_a[j]), 1):
             if frame_a[j, i] == 0 and frame_d[j, i] == 0:
                 frame_a_bins[j, 0] += 1
@@ -112,6 +109,7 @@ def compute_graph_2(frame_a, frame_d):
         sum_q = np.sum(frame_a_bins[i, :])
         frame_a_bins[i, :] = frame_a_bins[i, :] / sum_q
     data = frame_a_bins
+
     #transposing the data
     data = data.T
 
@@ -119,24 +117,22 @@ def compute_graph_2(frame_a, frame_d):
 
 
 def create_graph_2(period,figsize):
-    # Importer frame_a et frame_d à partir de fichiers npy
+    """Create the second graph showing the evolution of the strategies"""
     dir_path = os.path.dirname(os.path.abspath(__file__))
     frame_a = np.load(os.path.join(dir_path, 'frame_a.npy'))
     frame_d = np.load(os.path.join(dir_path, 'frame_d.npy'))
 
     data = compute_graph_2(frame_a, frame_d)
-
     colors = ['red', 'lightgreen', 'purple', 'blue', 'darkgreen', 'lightblue', 'orange', 'brown', 'grey']
-    # Nombre de groupes (c'est-à-dire nombre de barres empilées)
     fig2 = plt.figure(figsize=figsize)
     plt.bar(np.arange(data.shape[1]), data[0, :], color=colors[0])
     bottom = data[0, :]
     for i in range(1, data.shape[0]):
         plt.bar(np.arange(data.shape[1]), data[i, :], bottom=bottom, color=colors[i])
         bottom += data[i, :]
-    # Customiser les étiquettes de l'axe des x
-    custom_ticks = np.arange(0, 76, 25)  # Example: custom ticks every 25 periods
-    custom_labels = [f'Gen {int((i/75)*period)}' for i in custom_ticks]  # Example: custom labels
+    # Customizing x-axis labels
+    custom_ticks = np.arange(0, 76, 25)
+    custom_labels = [f'Gen {int((i/75)*period)}' for i in custom_ticks]
     plt.xticks(custom_ticks, custom_labels, rotation=45)
 
     plt.gca().yaxis.set_tick_params(rotation=90)
@@ -145,17 +141,18 @@ def create_graph_2(period,figsize):
     plt.xlabel("Generation", fontsize=15, fontweight='bold')
     plt.ylabel("Proportion", fontsize=15, fontweight='bold')
 
-    # Ajuster la position de la légende
+    # Add a legend
     plt.legend(["Unconditionally selfish", "De-escalators", "Quasi-de-escalator", "Ambiguous", "Perfect reciprocators", "Quasi-escalator", "Escalators",
                 "Unconditionally generous", "Other"], bbox_to_anchor=(1.05, 1), fontsize='x-small')
 
 
-    plt.subplots_adjust(left=0.1, right=0.75, top=0.9, bottom=0.2)  # Ajuster la mise en page pour laisser de la place pour la légende
+    plt.subplots_adjust(left=0.1, right=0.75, top=0.9, bottom=0.2)
 
     return fig2
 
 
 def create_graph_3(period,figsize):
+    """Create the third graph showing the surplus per generation"""
     dir_path = os.path.dirname(os.path.abspath(__file__))
     frame_surplus = np.load(os.path.join(dir_path, 'frame_surplus.npy'))
     #sum for each line
@@ -165,8 +162,8 @@ def create_graph_3(period,figsize):
     plt.bar(np.arange(frame_surplus.shape[0]), frame_surplus)
 
     # Customize x-axis labels
-    custom_ticks = np.arange(0, 76, 25)  # Example: custom ticks every 25 periods
-    custom_labels = [f'Gen {int((i/75)*period)}' for i in custom_ticks]  # Example: custom labels
+    custom_ticks = np.arange(0, 76, 25)
+    custom_labels = [f'Gen {int((i/75)*period)}' for i in custom_ticks]
     plt.xticks(custom_ticks, custom_labels, rotation=45)
 
     # Labels and title
@@ -178,19 +175,13 @@ def create_graph_3(period,figsize):
 
     return fig3
 
-
-
-
-
-
-
 def store_all_graphs(period):
+    """Regenerate and Store all the graphs in a pdf file"""
     # Import frame_x from npy file
     dir_path = os.path.dirname(os.path.abspath(__file__))
 
-
+    # generate the first graph
     frame_x = np.load(os.path.join(dir_path, 'frame_x.npy'))
-
     data = compute_graph_1(frame_x)
 
     # Create a figure
@@ -224,51 +215,42 @@ def store_all_graphs(period):
     plt.ylabel('Proportion', fontsize=20, fontweight='bold')
 
     # Adjust layout for better visualization
-    #plt.subplots_adjust(left=0.1, right=0.95, top=0.9, bottom=0.2)
     plt.subplots_adjust(left=0.08, right=1, top=0.98,bottom=0.11)
-
     # Add colorbar outside the plot
     plt.colorbar()
-
-
-
+    # Save the figure
     plt.savefig(os.path.join(dir_path, 'Evolution_of_First_Move.pdf'), dpi=150)
 
     #graph 2
-
     frame_a = np.load(os.path.join(dir_path, 'frame_a.npy'))
     frame_d = np.load(os.path.join(dir_path, 'frame_d.npy'))
-
     data = compute_graph_2(frame_a, frame_d)
 
     colors = ['red', 'lightgreen', 'purple', 'blue', 'darkgreen', 'lightblue', 'orange', 'brown', 'grey']
-    # Nombre de groupes (c'est-à-dire nombre de barres empilées)
     plt.figure(figsize=(10, 6))
     plt.bar(np.arange(data.shape[1]), data[0, :], color=colors[0])
     bottom = data[0, :]
     for i in range(1, data.shape[0]):
         plt.bar(np.arange(data.shape[1]), data[i, :], bottom=bottom, color=colors[i])
         bottom += data[i, :]
-    # Customiser les étiquettes de l'axe des x
-    custom_ticks = np.arange(0, 76, 25)  # Example: custom ticks every 25 periods
-    custom_labels = [f'Gen {int((i / 75) * period)}' for i in custom_ticks]  # Example: custom labels
+    custom_ticks = np.arange(0, 76, 25)
+    custom_labels = [f'Gen {int((i / 75) * period)}' for i in custom_ticks]
     plt.xticks(custom_ticks, custom_labels, rotation=0)
-    plt.tick_params(axis='x', labelsize=15)  # Change the size of the numbers on the x-axis to 10
-    plt.tick_params(axis='y', labelsize=15)  # Change the size of the numbers on the y-axis to 10
+    plt.tick_params(axis='x', labelsize=15)
+    plt.tick_params(axis='y', labelsize=15)
 
     plt.gca().yaxis.set_tick_params(rotation=0)
     plt.xlabel("Generation", fontsize=20, fontweight='bold')
     plt.ylabel("Proportion", fontsize=20, fontweight='bold')
 
-    # Ajuster la position de la légende
     plt.legend(["Unconditionally \nselfish", "De-escalators", "Quasi-\nde-escalator", "Ambiguous", "Perfect \nreciprocators",
                 "Quasi-\nescalator", "Escalators",
                 "Unconditionally \ngenerous", "Other"], bbox_to_anchor=(1, 1), fontsize=11.5)
 
-    plt.subplots_adjust(left=0.08, right=0.8, top=0.98,bottom=0.11)  # Ajuster la mise en page pour laisser de la place pour la légende
-    # Sauvegarder le graphique
+    plt.subplots_adjust(left=0.08, right=0.8, top=0.98,bottom=0.11)
     plt.savefig(os.path.join(dir_path, 'Evolution_of_Strategies.pdf'), dpi=150)
 
+    #graph 3
     dir_path = os.path.dirname(os.path.abspath(__file__))
     frame_surplus = np.load(os.path.join(dir_path, 'frame_surplus.npy'))
     # sum for each line

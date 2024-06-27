@@ -2,33 +2,33 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
-# Définir la fonction
 def f(d, delta, x_tilde, b):
     numerator = d * x_tilde * (1 + delta - 2 * b * delta * d)
     denominator = 2 * (1 - delta * d**2)
     result = numerator / denominator
     return result
 
-# Paramètres donnés
+# Set base parameters for the graph
 delta = 0.96
 x_tilde = 0.96
 b = 2
 
-# Plage de valeurs pour d
+# Create the range of values for d
 d_values = np.linspace(0, 1, 400)
 
-# Création du graphique
+# Create the figure
 plt.figure(figsize=(8, 6))
 
-# Fonction pour annoter les lignes
+# Function to annotate the line
 def annotate_line(d_values, f_values, b, ax):
     idx = np.argmax(d_values > 0.9)  # Trouver l'index où d est environ 0.5
     ax.annotate(f'x={b}', xy=(d_values[idx], f_values[idx]), xytext=(5, 5),
                 textcoords='offset points', color='black', fontsize=10,
                 bbox=dict(facecolor='white', edgecolor='black', alpha=0.7))
 
+
+# Compute and plot for x_tilde = 0.96
 x_tilde = 0.96
-# Calculer et tracer pour b = 2
 f_values = f(d_values, delta, x_tilde, b)
 positive_values = np.ma.masked_less_equal(f_values, 0)
 negative_values = np.ma.masked_greater(f_values, 0)
@@ -36,15 +36,16 @@ plt.plot(d_values, positive_values, 'b', label='f(d) > 0')
 plt.plot(d_values, negative_values, 'r', label='f(d) < 0')
 annotate_line(d_values, f_values, x_tilde, plt.gca())
 
+# Compute and plot for x_tilde = 0.04
 x_tilde = 0.04
-# Calculer et tracer pour b = 2
 f_values = f(d_values, delta, x_tilde, b)
 positive_values = np.ma.masked_less_equal(f_values, 0)
 negative_values = np.ma.masked_greater(f_values, 0)
 plt.plot(d_values, positive_values, 'b')
 plt.plot(d_values, negative_values, 'r')
 annotate_line(d_values, f_values, x_tilde, plt.gca())
-# Calculer et tracer pour b = 3
+
+# Compute and plot for x_tilde = 0.3
 x_tilde = 0.3
 f_values = f(d_values, delta, x_tilde, b)
 positive_values = np.ma.masked_less_equal(f_values, 0)
@@ -53,7 +54,7 @@ plt.plot(d_values, positive_values, 'b')
 plt.plot(d_values, negative_values, 'r')
 annotate_line(d_values, f_values, x_tilde, plt.gca())
 
-# Calculer et tracer pour b = 4
+# Compute and plot for x_tilde = 0.7
 x_tilde = 0.7
 f_values = f(d_values, delta, x_tilde, b)
 positive_values = np.ma.masked_less_equal(f_values, 0)
@@ -76,7 +77,7 @@ plt.ylabel('d', fontsize=16)
 dir_path = os.path.dirname(os.path.abspath(__file__))
 
 # Create the path to the directory where you want to save the file
-save_dir = os.path.join(dir_path, 'Graphs', 'Graph 2')
+save_dir = os.path.join(dir_path, 'Graphs')
 
 # Ensure the directory exists
 os.makedirs(save_dir, exist_ok=True)

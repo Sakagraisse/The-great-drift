@@ -1,6 +1,9 @@
-numpy
-matplotlib
+numpy == 1.26.4
+matplotlib == 3.9.0
 numba == 0.59.1
-tqdm
-PyQt6
-pyinstaller
+tqdm == 4.6.44
+PyQt6 == 6.7.0
+pyinstaller == 6.8.0
+
+# if not working with conda environment
+# pip install -r requirements.txt

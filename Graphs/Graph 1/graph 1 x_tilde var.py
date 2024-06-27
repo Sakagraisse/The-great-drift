@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap, TwoSlopeNorm
 import os
 
-# Définir la fonction
 def f(a, d, delta, x_tilde, b):
     term1_numerator = a * delta * (1 - b * (d - a)) * (
                 (1 - delta * d * (d - a)) - (x_tilde * (d - a) * (1 - delta) + a))
@@ -16,41 +15,42 @@ def f(a, d, delta, x_tilde, b):
 
     return term1 + term2
 
-# Paramètres
+# Set the values of the parameters
 delta = 0.96
 x_tilde = 0.96
 b = 2
 
-# Créer une grille de valeurs pour a et d
+# Create a grid of points
 a = np.linspace(0, 1, 100)
 d = np.linspace(0, 1, 100)
 a, d = np.meshgrid(a, d)
 
-# Calculer les valeurs de la fonction pour chaque point de la grille
+# Calculate the value of the function at each point in the grid
 z = f(a, d, delta, x_tilde, b)
 
-# Créer une colormap personnalisée pour les valeurs négatives et positives
+# Create a colormap that goes from red to blue
 positive_cm = plt.cm.Blues_r(np.linspace(0.5, 1, 128))
 negative_cm = plt.cm.Reds_r(np.linspace(0, 0.5, 128))
 
-# Fusionner les deux colormaps en une seule
+# Merge the two colormaps
 newcolors = np.vstack((negative_cm, positive_cm))
 newcmp = ListedColormap(newcolors)
 
-# Créer une norme pour centrer la colormap à zéro
+# Create a diverging color normalization
 divnorm = TwoSlopeNorm(vmin=z.min(), vcenter=0, vmax=z.max())
 
-# Tracer le graphique
+# Create the plot
 plt.figure(figsize=(8, 6))
 contour = plt.contourf(a, d, z, levels=100, cmap=newcmp, norm=divnorm)
 plt.colorbar(contour, label='f(a, d)')
 plt.xlabel('a')
 plt.ylabel('d')
 
-# Ajouter la courbe de niveau pour f(a, d) = 0
+# Add a contour line at x_tilde = 0.04
 zero_contour = plt.contour(a, d, z, levels=[0], colors='black', linewidths=1.5)
 plt.clabel(zero_contour, fmt='f(a,d)=0, x = 0,04', inline=True)
 
+# Add a contour line at x_tilde = 0.3
 delta = 0.96
 x_tilde = 0.04
 b = 2
@@ -59,6 +59,7 @@ z = f(a, d, delta, x_tilde, b)
 zero_contour = plt.contour(a, d, z, levels=[0], colors='black', linewidths=1.5)
 plt.clabel(zero_contour, fmt='f(a,d)=0, x = 0.04', inline=True)
 
+# Add a contour line at x_tilde = 0.7
 delta = 0.96
 x_tilde = 0.3
 b = 2
@@ -67,6 +68,7 @@ z = f(a, d, delta, x_tilde, b)
 zero_contour = plt.contour(a, d, z, levels=[0], colors='black', linewidths=1.5)
 plt.clabel(zero_contour, fmt='f(a,d)=0, x=0.3', inline=True)
 
+# Add a contour line at x_tilde = 0.96
 delta = 0.96
 x_tilde = 0.7
 b = 2
@@ -85,7 +87,7 @@ plt.ylabel('d', fontsize=16)
 dir_path = os.path.dirname(os.path.abspath(__file__))
 
 # Create the path to the directory where you want to save the file
-save_dir = os.path.join(dir_path, 'Graphs', 'Graph 1')
+save_dir = os.path.join(dir_path, 'Graphs')
 
 # Ensure the directory exists
 os.makedirs(save_dir, exist_ok=True)
