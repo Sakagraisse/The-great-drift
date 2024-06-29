@@ -38,3 +38,8 @@ coll = COLLECT(exe,
                upx=True,
                upx_exclude=[],
                name='The_Great_Drift')
+
+app = BUNDLE(coll,
+             name='The_Great_Drift',
+             icon='icon.ico',
+             onefile=True)
