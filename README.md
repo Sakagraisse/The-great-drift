@@ -13,7 +13,7 @@ Compiled apps are available in the release section of this repository. Download 
 
 ### Windows (only x86_64)
 1. Download the .exe file
-2. Run the .exe file
+2. Run the .exe file as administrator
 
 ***notes*** : 
 - If you get a warning from Windows Defender, click on "More info" and then "Run anyway"

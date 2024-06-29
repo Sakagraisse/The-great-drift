@@ -135,7 +135,7 @@ class ParameterChooser(QWidget):
         self.base_parameters_layout.addWidget(self.to_migrate_label, 2, 0)
         self.base_parameters_layout.addWidget(self.to_migrate_input, 2, 1)
 
-        self.mu_label = QLabel("Mutation rate in %")
+        self.mu_label = QLabel("Mutation Rate (%)")
         self.mu_input = QDoubleSpinBox()
         self.mu_input.setRange(0, 100)
         self.mu_input.setSingleStep(0.5)
@@ -162,7 +162,7 @@ class ParameterChooser(QWidget):
         self.base_parameters_layout.addWidget(self.truc_label, 3, 2)
         self.base_parameters_layout.addWidget(self.truc_input, 3, 3)
 
-        self.transfert_multiplier_label = QLabel("Transfert Multiplier")
+        self.transfert_multiplier_label = QLabel("Transfer Multiplier")
         self.transfert_multiplier_input = QDoubleSpinBox()
         self.transfert_multiplier_input.setRange(0, 100)
         self.transfert_multiplier_input.setSingleStep(0.1)
@@ -171,7 +171,7 @@ class ParameterChooser(QWidget):
         self.base_parameters_layout.addWidget(self.transfert_multiplier_label, 5, 0)
         self.base_parameters_layout.addWidget(self.transfert_multiplier_input, 5, 1)
 
-        self.x_i_value_label = QLabel("Initial x_i value")
+        self.x_i_value_label = QLabel("Initial x_i Value")
         self.x_i_value_input = QDoubleSpinBox()
         self.x_i_value_input.setRange(0, 1)
         self.x_i_value_input.setSingleStep(0.01)
@@ -207,8 +207,8 @@ class ParameterChooser(QWidget):
         #create 3 radio button mutually exclusive "Perfect Reciprocators", "Uncoditionnaly selfish" and "Eq degree of Escallation"
 
         self.perfect_reciprocators_radio = QRadioButton("Perfect Reciprocators")
-        self.uncoditionnaly_selfish_radio = QRadioButton("Uncoditionnaly selfish")
-        self.eq_degree_of_escallation_radio = QRadioButton("Eq degree of Escallation")
+        self.uncoditionnaly_selfish_radio = QRadioButton("Unconditionally Selfish")
+        self.eq_degree_of_escallation_radio = QRadioButton("Eq degree of Escalation")
         self.eq_degree_of_escallation_radio.clicked.connect(self.check_x_i_value)
 
         #create a button group for the radio button
@@ -242,11 +242,11 @@ class ParameterChooser(QWidget):
         self.graph2_button.clicked.connect(self.draw_graph_2)
         self.graph_grid_layout.addWidget(self.graph2_button, 0, 1)
 
-        self.graph3_button = QPushButton("Surplus per generation")
+        self.graph3_button = QPushButton("Surplus per Generation")
         self.graph3_button.clicked.connect(self.draw_graph_3)
         self.graph_grid_layout.addWidget(self.graph3_button, 1, 0)
 
-        self.save_all_button = QPushButton("Save All + parameters")
+        self.save_all_button = QPushButton("Save All + Parameters")
         self.save_all_button.clicked.connect(self.save_plots)
         self.graph_grid_layout.addWidget(self.save_all_button, 1, 1)
 
