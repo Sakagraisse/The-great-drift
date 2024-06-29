@@ -85,6 +85,8 @@ class ParameterChooser(QWidget):
             test = int(self.base_parameters_group.width() * 0.1)
         elif sys.platform == "win32":
             test = int(self.base_parameters_group.width() * 0.15)
+        else:
+            test = int(self.base_parameters_group.width() * 0.1)
         self.base_parameters_layout = QGridLayout()
 
         self.group_size_label = QLabel("Group Size")
