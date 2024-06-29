@@ -39,7 +39,3 @@ coll = COLLECT(exe,
                upx_exclude=[],
                name='The_Great_Drift')
 
-app = BUNDLE(coll,
-             name='The_Great_Drift',
-             icon='icon.ico',
-             onefile=True)
