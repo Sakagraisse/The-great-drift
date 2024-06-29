@@ -29,9 +29,9 @@ exe = EXE(pyz,
           name='The Great Drift',
           debug=False,
           strip=False,
-          upx=False,
+          upx=True,
           runtime_tmpdir=None,
-          console=True,
+          console=False,
           icon='icon.ico')
 
 app = BUNDLE(exe,

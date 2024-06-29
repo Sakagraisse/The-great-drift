@@ -35,10 +35,10 @@ Compiled apps are available in the release section of this repository. Download 
 
 ### MacOS (only arm64)
 1. The "The-great-drift.app" is available in the release section of this repository. Download the .app file
-2. Run the .app file
+2. Run the .app file ( Warning : don't launch the app from the download folder, move it to another folder before launching it)
 
 ***notes*** :
-- If you get a warning about the app being from an unidentified developer, you can either run the app with right-click -> Open or go to System Preferences -> Security & Privacy -> General and click on "Open Anyway"
+- If you get a warning about the app being from an unidentified developer (or something similar), you can either run the app with right-click -> press Option and click Open
 - The app may be slow to launch on some computers, please be patient
 - On the first simulation, part of the code is autocompiled, this may take a few seconds
 
