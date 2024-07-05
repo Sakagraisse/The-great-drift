@@ -71,8 +71,8 @@ plt.legend()
 plt.tick_params(axis='both', which='major', labelsize=14)
 
 # Increase the size of the axis labels
-plt.xlabel('a', fontsize=16)
-plt.ylabel('d', fontsize=16)
+plt.xlabel('d', fontsize=16)
+plt.ylabel('f(d)', fontsize=16)
 # Get the directory of the current script
 dir_path = os.path.dirname(os.path.abspath(__file__))
 

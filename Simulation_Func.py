@@ -78,7 +78,6 @@ def create_initial_pop(group_size, number_groups, num_interactions,transfert_mul
     fitnessIN = np.zeros((number_groups, group_size), dtype=np.float64)
     fitnessOUT = np.zeros((number_groups, group_size), dtype=np.float64)
     fitnessToT = np.zeros((number_groups, group_size), dtype=np.float64)
-
     return x_i, d_i, a_i, store_interaction, fitnessIN, fitnessOUT, fitnessToT,surplus
 
 

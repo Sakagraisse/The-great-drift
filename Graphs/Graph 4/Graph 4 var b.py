@@ -66,8 +66,8 @@ plt.clabel(zero_contour, fmt='f(a,d)=0, b = 4', inline=True)
 plt.tick_params(axis='both', which='major', labelsize=14)
 
 # Increase the size of the axis labels
-plt.xlabel('a', fontsize=16)
-plt.ylabel('d', fontsize=16)
+plt.xlabel('h', fontsize=16)
+plt.ylabel('g', fontsize=16)
 
 
 dir_path = os.path.dirname(os.path.abspath(__file__))

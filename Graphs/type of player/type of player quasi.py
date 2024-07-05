@@ -14,13 +14,14 @@ ax.axhline(y=0.002, color='red', alpha=1, linewidth=4, label='Unconditionally se
 
 ax.plot(x, (x*0.5), color='lightgreen', alpha=1, linewidth=4, label='De-escalators')
 
-ax.plot(x, (0.3 + x*(0.96 - 0.3)), color='purple', alpha=1, linewidth=4,label='Quasi-de-escalators')
+ax.plot(x, (0.05 + x*(0.7 - 0.03)), color='purple', alpha=1, linewidth=4, label='Quasi-escalators')
+
 
 ax.plot(x, (0.3 + x*(0.7 - 0.3)), color='blue', alpha=1, linewidth=4,label='Ambiguous')
 
 ax.plot(x, x, color='green', alpha=1, linewidth=4, label='Perfect reciprocators')
 
-ax.plot(x, (0.05 + x*(0.7 - 0.03)), color='lightblue', alpha=1, linewidth=4, label='Quasi-escalators')
+ax.plot(x, (0.3 + x*(0.96 - 0.3)), color='lightblue', alpha=1, linewidth=4,label='Quasi-de-escalators')
 
 ax.plot(x, (x*0.5+0.5 ), color='orange', alpha=1, linewidth=4, label='Escalators')
 
@@ -34,8 +35,8 @@ ax.tick_params(axis='both', labelsize=15)
 ax.set_xlabel('Most recent transfer (partner)', fontsize=16)
 ax.set_xlabel('a', fontsize=20, rotation=0)
 ax.xaxis.set_label_coords(-0.07, -0.05)
+ax.text(0.5, -0.1, "Most recent transfer (partner)", transform=ax.transAxes, ha="center", fontsize=20)
 
-# Create a secondary y-axis and set its label to 'd'
 ax2 = ax.twinx()
 ax2.set_ylabel('d', fontsize=20, rotation=0)
 ax2.yaxis.set_label_coords(1.07, -0.05)
