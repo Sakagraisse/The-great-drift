@@ -2,9 +2,28 @@ import os
 import numpy as np
 import numba as nb
 from math import sqrt
+import torch
+from typing import Tuple
 
 
-@nb.jit(nopython=True)
+def activate_torch_mps():
+    """
+    Activate the MPS backend if available.
+    """
+    # Check if the MPS backend is available
+    if torch.backends.mps.is_available():
+        device = torch.device("mps")
+        print("Le backend MPS est disponible. Exécution sur le GPU.")
+    else:
+        device = torch.device("cpu")
+        print("Le backend MPS n'est pas disponible. Exécution sur le CPU.")
+    device = torch.device("cpu")
+    return device
+
+
+
+
+
 def create_frames(period, group_size, number_groups):
     """
         This function creates the arrays to store the result of the simulation.
@@ -27,8 +46,8 @@ def create_frames(period, group_size, number_groups):
     return frame_a, frame_x, frame_d,frame_fitnessToT, frame_surplus,index
 
 
-@nb.jit(nopython=True)
-def create_initial_pop(group_size, number_groups, num_interactions,transfert_multiplier,x_i_value,choice):
+#@nb.jit(nopython=True)
+def create_initial_pop(group_size, number_groups, num_interactions,transfert_multiplier,x_i_value,choice,device = 'cpu'):
     """
     This function creates the initial population of players for a simulation.
 
@@ -44,14 +63,15 @@ def create_initial_pop(group_size, number_groups, num_interactions,transfert_mul
     # choice = 1: unconditionally selfish
     # choice = 2: equilibrium degree of escalation
     if choice == 0:
-        x_i = np.ones((number_groups, group_size), dtype=np.float64)*x_i_value
-        a_i = np.zeros((number_groups, group_size), dtype=np.float64)
-        d_i = np.ones((number_groups, group_size), dtype=np.float64)
+        x_i = torch.ones(number_groups, group_size, dtype=torch.float32, device=device) * x_i_value
+        a_i = torch.zeros((number_groups, group_size), dtype=torch.float32, device=device)
+        d_i = torch.ones((number_groups, group_size), dtype=torch.float32, device=device)
 
     elif choice == 1:
-        x_i = np.ones((number_groups, group_size), dtype=np.float64)*x_i_value
-        a_i = np.zeros((number_groups, group_size), dtype=np.float64)
-        d_i = np.zeros((number_groups, group_size), dtype=np.float64)
+        x_i = torch.ones(number_groups, group_size, dtype=torch.float32, device=device) * x_i_value
+        a_i = torch.zeros((number_groups, group_size), dtype=torch.float32, device=device)
+        d_i = torch.zeros((number_groups, group_size), dtype=torch.float32, device=device)
+
     elif choice == 2:
         if num_interactions == 1:
             print("The equilibrium degree is not defined for one interaction")
@@ -63,25 +83,53 @@ def create_initial_pop(group_size, number_groups, num_interactions,transfert_mul
                                          2 * transfert_multiplier * delta)
             a_hat = 1 - equilibrium_degree
 
-
-        x_i = np.ones((number_groups, group_size), dtype=np.float64)*x_i_value
-        #a_i is a_hat
-        a_i = np.ones((number_groups, group_size), dtype=np.float64) * a_hat
-        d_i = np.ones((number_groups, group_size), dtype=np.float64)
+        x_i = torch.ones(number_groups, group_size, dtype=torch.float32, device=device) * x_i_value
+        a_i = torch.ones((number_groups, group_size), dtype=torch.float32, device=device) * a_hat
+        d_i = torch.ones((number_groups, group_size), dtype=torch.float32, device=device)
     else:
         raise ValueError("The choice must be 0, 1 or 2")
 
 
     # Initialize the store_interaction, fitnessIN, fitnessOUT, fitnessToT, and surplus arrays
-    store_interaction = np.zeros((number_groups, group_size,num_interactions), dtype=np.float64)
-    surplus = np.zeros((number_groups, group_size), dtype=np.float64)
-    fitnessIN = np.zeros((number_groups, group_size), dtype=np.float64)
-    fitnessOUT = np.zeros((number_groups, group_size), dtype=np.float64)
-    fitnessToT = np.zeros((number_groups, group_size), dtype=np.float64)
+    store_interaction = torch.zeros((number_groups, group_size, num_interactions), dtype=torch.float32, device=device)
+    surplus = torch.zeros((number_groups, group_size), dtype=torch.float32, device=device)
+    fitnessIN = torch.zeros((number_groups, group_size), dtype=torch.float32, device=device)
+    fitnessOUT = torch.zeros((number_groups, group_size), dtype=torch.float32, device=device)
+    fitnessToT = torch.zeros((number_groups, group_size), dtype=torch.float32, device=device)
     return x_i, d_i, a_i, store_interaction, fitnessIN, fitnessOUT, fitnessToT,surplus
 
 
-@nb.jit(nopython=True)
+@torch.jit.script
+def store_data_torch(
+    x_i: torch.Tensor,
+    d_i: torch.Tensor,
+    a_i: torch.Tensor,
+    fitnessToT: torch.Tensor,
+    surplus: torch.Tensor
+):
+    """
+    Store the data in flattened tensors.
+
+    Parameters:
+    x_i : first move (torch.Tensor)
+    a_i : left intercept (torch.Tensor)
+    d_i : right intercept (torch.Tensor)
+    fitnessToT : total fitness (torch.Tensor)
+    surplus : surplus (torch.Tensor)
+
+    Returns:
+    Flattened torch.Tensors
+    """
+    frame_a = a_i.flatten()
+    frame_x = x_i.flatten()
+    frame_d = d_i.flatten()
+    frame_fitnessToT = fitnessToT.flatten()
+    frame_surplus = surplus.flatten()
+    return frame_a, frame_x, frame_d, frame_fitnessToT, frame_surplus
+
+
+
+#@nb.jit(nopython=True)
 def store_data(x_i, d_i, a_i,fitnessToT ,surplus, frame_a, frame_x, frame_d, frame_fitnessToT, frame_surplus,period):
     """
     Store the data in numpy arrays for a given period.
@@ -94,330 +142,520 @@ def store_data(x_i, d_i, a_i,fitnessToT ,surplus, frame_a, frame_x, frame_d, fra
     frame_a, frame_x, frame_d, frame_fitnessToT : numpy.ndarray to store the results
     """
 
-    frame_a[period, :] = a_i.flatten()
-    frame_x[period, :] = x_i.flatten()
-    frame_d[period, :] = d_i.flatten()
-    frame_fitnessToT[period, :] = fitnessToT.flatten()
-    frame_surplus[period, :] = surplus.flatten()
+    frame_a_torch, frame_x_torch, frame_d_torch, frame_fitnessToT_torch, frame_surplus_torch = store_data_torch(
+        x_i, d_i, a_i, fitnessToT, surplus
+    )
+
+    # Convertir les tenseurs en tableaux NumPy
+    frame_a_np = frame_a_torch.cpu().numpy()
+    frame_x_np = frame_x_torch.cpu().numpy()
+    frame_d_np = frame_d_torch.cpu().numpy()
+    frame_fitnessToT_np = frame_fitnessToT_torch.cpu().numpy()
+    frame_surplus_np = frame_surplus_torch.cpu().numpy()
+
+    # Stocker les données dans les tableaux NumPy de stockage
+    frame_a[period, :] = frame_a_np
+    frame_x[period, :] = frame_x_np
+    frame_d[period, :] = frame_d_np
+    frame_fitnessToT[period, :] = frame_fitnessToT_np
+    frame_surplus[period, :] = frame_surplus_np
     return frame_a, frame_x, frame_d, frame_fitnessToT,frame_surplus
 
-@nb.jit(nopython=True)
-def setdiff1d_numba(arr1, arr2):
+
+
+
+
+@torch.jit.script
+def setdiff1d_numba(arr1: torch.Tensor, arr2: torch.Tensor) -> torch.Tensor:
     """
-        Compute the set difference of two arrays using Numba. The set difference
-        returns the elements that are in arr1 but not in arr2.
-
-        Parameters: arr1, arr2
-
-        Returns: numpy.ndarray
-    """
-    return np.asarray(list(set(arr1) - set(arr2)))
-
-
-@nb.jit(nopython=True)
-def migration(x_i, d_i, a_i, fitnessToT, fitnessOUT, fitnessIN, surplus, number_groups, group_size, to_migrate):
-
-    """
-    Migrate the players between groups
+    Compute the set difference of two tensors using PyTorch.
+    Returns the elements that are in arr1 but not in arr2.
 
     Parameters:
-    x_i : first move
-    d_i : right intercept
-    a_i : left intercept
-    fitnessToT : total fitness
-    fitnessOUT : fitness out group interaction (place holder for future use)
-    fitnessIN : fitness in group interaction
-    surplus : surplus of the players
-    number_groups : number of groups
-    group_size : size of the groups
-    to_migrate : number of players to migrate
+    arr1: torch.Tensor
+    arr2: torch.Tensor
+
+    Returns:
+    torch.Tensor
+    """
+    mask = ~torch.isin(arr1, arr2)
+    return arr1[mask]
+
+
+
+
+@torch.jit.script
+def migration(
+    x_i: torch.Tensor,
+    d_i: torch.Tensor,
+    a_i: torch.Tensor,
+    fitnessToT: torch.Tensor,
+    fitnessOUT: torch.Tensor,
+    fitnessIN: torch.Tensor,
+    surplus: torch.Tensor,
+    number_groups: int,
+    group_size: int,
+    to_migrate: int
+):
+    """
+    Migrate the players between groups using PyTorch tensors.
+
+    Parameters:
+    x_i : first move (torch.Tensor)
+    d_i : right intercept (torch.Tensor)
+    a_i : left intercept (torch.Tensor)
+    fitnessToT : total fitness (torch.Tensor)
+    fitnessOUT : fitness out group interaction (torch.Tensor)
+    fitnessIN : fitness in group interaction (torch.Tensor)
+    surplus : surplus of the players (torch.Tensor)
+    number_groups : number of groups (int)
+    group_size : size of the groups (int)
+    to_migrate : number of players to migrate (int)
     """
     if to_migrate > group_size:
         raise ValueError("The number of migrants is greater than the group size")
 
-    # If no migration is needed, return the original population
     if to_migrate == 0:
         return x_i, d_i, a_i, fitnessToT, fitnessOUT, fitnessIN, surplus
 
-    # Create a temporary array to store the migrants
-    temp_x_i = np.zeros((number_groups,to_migrate), dtype=np.float64)
-    temp_d_i = np.zeros((number_groups,to_migrate), dtype=np.float64)
-    temp_a_i = np.zeros((number_groups,to_migrate), dtype=np.float64)
-    temp_fitnessToT = np.zeros((number_groups,to_migrate), dtype=np.float64)
-    temp_fitnessOUT = np.zeros((number_groups,to_migrate), dtype=np.float64)
-    temp_fitnessIN = np.zeros((number_groups,to_migrate), dtype=np.float64)
-    temp_surplus = np.zeros((number_groups,to_migrate), dtype=np.float64)
+    device = x_i.device
 
+    # Générer des permutations aléatoires pour chaque groupe
+    rand_values = torch.rand(number_groups, group_size, device=device)
+    indices = rand_values.argsort(dim=1)
 
-    # extract the migrants from the population
-    for i in range(number_groups):
-        indices = np.arange(group_size)
-        np.random.shuffle(indices)
-        x_i[i,:] = x_i[i,indices]
-        d_i[i,:] = d_i[i,indices]
-        a_i[i,:] = a_i[i,indices]
-        fitnessToT[i,:] = fitnessToT[i,indices]
-        fitnessOUT[i,:] = fitnessOUT[i,indices]
-        fitnessIN[i,:] = fitnessIN[i,indices]
-        surplus[i,:] = surplus[i,indices]
-        temp_x_i[i,:] = x_i[i,0:to_migrate]
-        x_i[i,0:to_migrate] = np.zeros(to_migrate, dtype=np.float64)
-        temp_d_i[i,:] = d_i[i,0:to_migrate]
-        d_i[i,0:to_migrate] = np.zeros(to_migrate, dtype=np.float64)
-        temp_a_i[i,:] = a_i[i,0:to_migrate]
-        a_i[i,0:to_migrate] = np.zeros(to_migrate, dtype=np.float64)
-        temp_fitnessToT[i,:] = fitnessToT[i,0:to_migrate]
-        fitnessToT[i,0:to_migrate] = np.zeros(to_migrate, dtype=np.float64)
-        temp_fitnessOUT[i,:] = fitnessOUT[i,0:to_migrate]
-        fitnessOUT[i,0:to_migrate] = np.zeros(to_migrate, dtype=np.float64)
-        temp_fitnessIN[i,:] = fitnessIN[i,0:to_migrate]
-        fitnessIN[i,0:to_migrate] = np.zeros(to_migrate, dtype=np.float64)
-        temp_surplus[i,:] = surplus[i,0:to_migrate]
-        surplus[i,0:to_migrate] = np.zeros(to_migrate, dtype=np.float64)
+    # Réorganiser les tenseurs en utilisant les indices mélangés
+    x_i = x_i.gather(1, indices)
+    d_i = d_i.gather(1, indices)
+    a_i = a_i.gather(1, indices)
+    fitnessToT = fitnessToT.gather(1, indices)
+    fitnessOUT = fitnessOUT.gather(1, indices)
+    fitnessIN = fitnessIN.gather(1, indices)
+    surplus = surplus.gather(1, indices)
 
-    # Shuffle the migrants
-    temp_x_i = temp_x_i.ravel()
-    temp_d_i = temp_d_i.ravel()
-    temp_a_i = temp_a_i.ravel()
-    temp_fitnessToT = temp_fitnessToT.ravel()
-    temp_fitnessOUT = temp_fitnessOUT.ravel()
-    temp_fitnessIN = temp_fitnessIN.ravel()
-    temp_surplus = temp_surplus.ravel()
-    indices2 = np.arange((to_migrate * number_groups))
-    np.random.shuffle(indices2)
+    # Extraire les migrants
+    temp_x_i = x_i[:, :to_migrate].clone()
+    temp_d_i = d_i[:, :to_migrate].clone()
+    temp_a_i = a_i[:, :to_migrate].clone()
+    temp_fitnessToT = fitnessToT[:, :to_migrate].clone()
+    temp_fitnessOUT = fitnessOUT[:, :to_migrate].clone()
+    temp_fitnessIN = fitnessIN[:, :to_migrate].clone()
+    temp_surplus = surplus[:, :to_migrate].clone()
 
-    # Reorder the migrants
-    temp_x_i[:] = temp_x_i[indices2]
-    temp_d_i[:] = temp_d_i[indices2]
-    temp_a_i[:] = temp_a_i[indices2]
-    temp_fitnessToT[:] = temp_fitnessToT[indices2]
-    temp_fitnessOUT[:] = temp_fitnessOUT[indices2]
-    temp_fitnessIN[:] = temp_fitnessIN[indices2]
-    temp_surplus[:] = temp_surplus[indices2]
+    # Remplacer les positions des migrants par zéro dans les groupes
+    x_i[:, :to_migrate] = 0.0
+    d_i[:, :to_migrate] = 0.0
+    a_i[:, :to_migrate] = 0.0
+    fitnessToT[:, :to_migrate] = 0.0
+    fitnessOUT[:, :to_migrate] = 0.0
+    fitnessIN[:, :to_migrate] = 0.0
+    surplus[:, :to_migrate] = 0.0
 
-    # Migrate the players
-    for j in range(number_groups):
-        x_i[j,0:to_migrate] = temp_x_i[j*to_migrate:(j+1)*to_migrate]
-        d_i[j,0:to_migrate] = temp_d_i[j*to_migrate:(j+1)*to_migrate]
-        a_i[j,0:to_migrate] = temp_a_i[j*to_migrate:(j+1)*to_migrate]
-        fitnessToT[j,0:to_migrate] = temp_fitnessToT[j*to_migrate:(j+1)*to_migrate]
-        fitnessOUT[j,0:to_migrate] = temp_fitnessOUT[j*to_migrate:(j+1)*to_migrate]
-        fitnessIN[j,0:to_migrate] = temp_fitnessIN[j*to_migrate:(j+1)*to_migrate]
-        surplus[j,0:to_migrate] = temp_surplus[j*to_migrate:(j+1)*to_migrate]
+    # Aplatir les migrants et les mélanger
+    total_migrants = number_groups * to_migrate
+    temp_x_i_flat = temp_x_i.reshape(total_migrants)
+    temp_d_i_flat = temp_d_i.reshape(total_migrants)
+    temp_a_i_flat = temp_a_i.reshape(total_migrants)
+    temp_fitnessToT_flat = temp_fitnessToT.reshape(total_migrants)
+    temp_fitnessOUT_flat = temp_fitnessOUT.reshape(total_migrants)
+    temp_fitnessIN_flat = temp_fitnessIN.reshape(total_migrants)
+    temp_surplus_flat = temp_surplus.reshape(total_migrants)
+
+    # Mélanger les migrants
+    shuffle_indices = torch.randperm(total_migrants, device=device)
+
+    temp_x_i_flat = temp_x_i_flat[shuffle_indices]
+    temp_d_i_flat = temp_d_i_flat[shuffle_indices]
+    temp_a_i_flat = temp_a_i_flat[shuffle_indices]
+    temp_fitnessToT_flat = temp_fitnessToT_flat[shuffle_indices]
+    temp_fitnessOUT_flat = temp_fitnessOUT_flat[shuffle_indices]
+    temp_fitnessIN_flat = temp_fitnessIN_flat[shuffle_indices]
+    temp_surplus_flat = temp_surplus_flat[shuffle_indices]
+
+    # Reshaper les migrants en (number_groups, to_migrate)
+    temp_x_i = temp_x_i_flat.reshape(number_groups, to_migrate)
+    temp_d_i = temp_d_i_flat.reshape(number_groups, to_migrate)
+    temp_a_i = temp_a_i_flat.reshape(number_groups, to_migrate)
+    temp_fitnessToT = temp_fitnessToT_flat.reshape(number_groups, to_migrate)
+    temp_fitnessOUT = temp_fitnessOUT_flat.reshape(number_groups, to_migrate)
+    temp_fitnessIN = temp_fitnessIN_flat.reshape(number_groups, to_migrate)
+    temp_surplus = temp_surplus_flat.reshape(number_groups, to_migrate)
+
+    # Redistribuer les migrants dans les groupes
+    x_i[:, :to_migrate] = temp_x_i
+    d_i[:, :to_migrate] = temp_d_i
+    a_i[:, :to_migrate] = temp_a_i
+    fitnessToT[:, :to_migrate] = temp_fitnessToT
+    fitnessOUT[:, :to_migrate] = temp_fitnessOUT
+    fitnessIN[:, :to_migrate] = temp_fitnessIN
+    surplus[:, :to_migrate] = temp_surplus
 
     return x_i, d_i, a_i, fitnessToT, fitnessOUT, fitnessIN, surplus
 
 
 
 
-@nb.jit(nopython=True)
-def IN_social_dilemma(x_i, d_i, a_i, store_interaction, fitnessIN, number_groups, group_size, num_interactions, transfert_multiplier,surplus):
+
+
+
+@torch.jit.script
+def IN_social_dilemma(
+    x_i: torch.Tensor,
+    d_i: torch.Tensor,
+    a_i: torch.Tensor,
+    store_interaction: torch.Tensor,
+    fitnessIN: torch.Tensor,
+    number_groups: int,
+    group_size: int,
+    num_interactions: int,
+    transfert_multiplier: float,
+    surplus: torch.Tensor
+    ):
     """
-    Perform the in-group social dilemma
+    Perform the in-group social dilemma using PyTorch tensors.
 
     Parameters:
-    x_i : first move
-    d_i : right intercept
-    a_i : left intercept
-    store_interaction : store the interaction
-    fitnessIN : fitness in group interaction
-    number_groups : number of groups
-    group_size : size of the groups
-    num_interactions : number of interactions
-    transfert_multiplier : transfer multiplier
-    surplus : surplus of the players
+    x_i : first move (torch.Tensor)
+    d_i : right intercept (torch.Tensor)
+    a_i : left intercept (torch.Tensor)
+    store_interaction : store the interaction (torch.Tensor)
+    fitnessIN : fitness in group interaction (torch.Tensor)
+    number_groups : number of groups (int)
+    group_size : size of the groups (int)
+    num_interactions : number of interactions (int)
+    transfert_multiplier : transfer multiplier (float)
+    surplus : surplus of the players (torch.Tensor)
+
+    Returns:
+    Updated tensors: x_i, d_i, a_i, store_interaction, fitnessIN, surplus
     """
+    device = x_i.device
 
-    #iterate over the groups
-    for j in range(number_groups):
-        indices = np.arange(group_size)
-        np.random.shuffle(indices)
-        x_i[j,:] = x_i[j,indices]
-        d_i[j,:] = d_i[j,indices]
-        a_i[j,:] = a_i[j,indices]
-        #iterate over the players
-        for i in range(0, group_size, 2):
-            #player 1 and player 2
-            p1 = i
-            p2 = i + 1
-            store_interaction[j, p1, 0] = x_i[j, p1]
-            store_interaction[j, p2, 0] = a_i[j, p2] + (d_i[j, p2] - a_i[j, p2]) * \
-                                               store_interaction[j, p1, 0]
+    # Mélange des joueurs au sein de chaque groupe
+    rand_values = torch.rand(number_groups, group_size, device=device)
+    indices = rand_values.argsort(dim=1)
+    x_i = x_i.gather(1, indices)
+    d_i = d_i.gather(1, indices)
+    a_i = a_i.gather(1, indices)
 
-            fitnessIN[j, p1] = 1 - store_interaction[j, p1, 0] + store_interaction[j, p2, 0] * transfert_multiplier
-            fitnessIN[j, p2] = 1 - store_interaction[j, p2, 0] + store_interaction[j, p1, 0] * transfert_multiplier
+    # Génération des indices des joueurs appariés
+    num_pairs = group_size // 2
+    p1_indices = torch.arange(0, num_pairs * 2, 2, device=device)
+    p2_indices = torch.arange(1, num_pairs * 2, 2, device=device)
 
-            #iterate over the interactions
-            if num_interactions > 1:
-                for k in range(1,num_interactions):
-                    store_interaction[j, p1, k] = a_i[j, p1] + (d_i[j, p1] - a_i[j, p1]) * store_interaction[j, p2, k-1]
-                    store_interaction[j, p2, k] = a_i[j, p2] + (d_i[j, p2] - a_i[j, p2]) * store_interaction[j, p1, k]
+    # Extraction des variables pour p1 et p2
+    x_i_p1 = x_i[:, p1_indices]
+    x_i_p2 = x_i[:, p2_indices]
+    a_i_p1 = a_i[:, p1_indices]
+    a_i_p2 = a_i[:, p2_indices]
+    d_i_p1 = d_i[:, p1_indices]
+    d_i_p2 = d_i[:, p2_indices]
 
-                    fitnessIN[j, p1] += 1 - store_interaction[j, p1, k] + store_interaction[j, p2, k] * transfert_multiplier
-                    fitnessIN[j, p2] += 1 - store_interaction[j, p2, k] + store_interaction[j, p1, k] * transfert_multiplier
+    # Initialisation de store_interaction pour p1 et p2
+    store_interaction_p1 = torch.zeros(number_groups, num_pairs, num_interactions, device=device)
+    store_interaction_p2 = torch.zeros(number_groups, num_pairs, num_interactions, device=device)
 
-            #calculate the surplus
-            surplus[j, p1] = (np.sum(store_interaction[j, p1, :])*transfert_multiplier)/ num_interactions
-            surplus[j, p2] = (np.sum(store_interaction[j, p2, :])*transfert_multiplier)/ num_interactions
+    store_interaction_p1[:, :, 0] = x_i_p1
+    store_interaction_p2[:, :, 0] = a_i_p2 + (d_i_p2 - a_i_p2) * store_interaction_p1[:, :, 0]
 
-    return x_i, d_i, a_i, store_interaction, fitnessIN,surplus
+    # Initialisation de fitnessIN
+    fitnessIN_p1 = 1 - store_interaction_p1[:, :, 0] + store_interaction_p2[:, :, 0] * transfert_multiplier
+    fitnessIN_p2 = 1 - store_interaction_p2[:, :, 0] + store_interaction_p1[:, :, 0] * transfert_multiplier
+
+    # Interactions supplémentaires si num_interactions > 1
+    if num_interactions > 1:
+        for k in range(1, num_interactions):
+            store_interaction_p1[:, :, k] = a_i_p1 + (d_i_p1 - a_i_p1) * store_interaction_p2[:, :, k - 1]
+            store_interaction_p2[:, :, k] = a_i_p2 + (d_i_p2 - a_i_p2) * store_interaction_p1[:, :, k]
+
+            fitnessIN_p1 += 1 - store_interaction_p1[:, :, k] + store_interaction_p2[:, :, k] * transfert_multiplier
+            fitnessIN_p2 += 1 - store_interaction_p2[:, :, k] + store_interaction_p1[:, :, k] * transfert_multiplier
+
+    # Calcul du surplus
+    surplus_p1 = (torch.sum(store_interaction_p1, dim=2) * transfert_multiplier) / num_interactions
+    surplus_p2 = (torch.sum(store_interaction_p2, dim=2) * transfert_multiplier) / num_interactions
+
+    # Mise à jour de fitnessIN et surplus
+    fitnessIN.index_copy_(1, p1_indices, fitnessIN_p1)
+    fitnessIN.index_copy_(1, p2_indices, fitnessIN_p2)
+    surplus.index_copy_(1, p1_indices, surplus_p1)
+    surplus.index_copy_(1, p2_indices, surplus_p2)
+
+    # Mise à jour de store_interaction
+    store_interaction.index_copy_(1, p1_indices, store_interaction_p1)
+    store_interaction.index_copy_(1, p2_indices, store_interaction_p2)
+
+    # Gestion des joueurs non appariés si group_size est impair
+    if group_size % 2 != 0:
+        last_player_index = group_size - 1
+        fitnessIN[:, last_player_index] = 1.0  # Valeur par défaut
+        surplus[:, last_player_index] = 0.0
+        store_interaction[:, last_player_index, :] = 0.0
+
+    return x_i, d_i, a_i, store_interaction, fitnessIN, surplus
 
 
-@nb.jit(nopython=True)
-def fitnessToT_calculation(fitnessIN, fitnessOUT, fitnessToT, number_groups, group_size,truc,num_interactions):
+
+import torch
+
+@torch.jit.script
+def fitnessToT_calculation(
+    fitnessIN: torch.Tensor,
+    fitnessOUT: torch.Tensor,
+    fitnessToT: torch.Tensor,
+    truc: float,
+    num_interactions: int
+) -> torch.Tensor:
     """
-    Calculate the total fitness
+    Calculate the total fitness using PyTorch tensors.
 
     Parameters:
-    fitnessIN : fitness in group interaction
-    fitnessOUT : fitness out group interaction
-    fitnessToT : total fitness
-    number_groups : number of groups
-    group_size : size of the groups
-    truc : truc parameter
-    num_interactions : number of interactions
+    fitnessIN : fitness in group interaction (torch.Tensor)
+    fitnessOUT : fitness out group interaction (torch.Tensor)
+    fitnessToT : total fitness (torch.Tensor)
+    truc : parameter (float)
+    num_interactions : number of interactions (int)
+
+    Returns:
+    Updated fitnessToT tensor.
     """
-    for j in range(number_groups):
-        for i in range(group_size):
-            fitnessToT[j,i] = (1-truc)*(num_interactions) + truc *(fitnessIN[j,i] + fitnessOUT[j,i])
+    fitnessToT = (1 - truc) * num_interactions + truc * (fitnessIN + fitnessOUT)
     return fitnessToT
 
 
-@nb.jit(nopython=True)
-def mutate(value, mu, step_size):
+
+@torch.jit.script
+def mutate(value: torch.Tensor, mu: float, step_size: float) -> torch.Tensor:
     """
-    Applies a mutation to the given value based on the mutation probability mu.
+    Applies a mutation to the given tensor of values based on the mutation probability mu.
 
     Parameters:
-    value : The value to mutate.
-    mu : The mutation probability.
-    step_size : The step size of the mutation.
+    value : The tensor of values to mutate (torch.Tensor)
+    mu : The mutation probability (float)
+    step_size : The step size of the mutation (float)
+
+    Returns:
+    A tensor with mutated values.
     """
-    if value < 0 or value > 1:
-        raise ValueError("The value must be within the range [0, 1].")
+    # Vérification des valeurs d'entrée
+    if torch.any(value < 0) or torch.any(value > 1):
+        raise ValueError("All values must be within the range [0, 1].")
     if mu < 0 or mu > 1:
         raise ValueError("The mutation probability mu must be within the range [0, 1].")
     if step_size <= 0 or step_size > 1:
         raise ValueError("The step size must be within the range (0, 1].")
 
-    if value > 0 and value < 1:
-        if np.random.random() < mu:
-            # Mutation: decide the step direction (up or down)
-            step_direction = np.random.choice(np.array([-step_size, step_size]))
-            # Apply the mutation while staying within the [0,1] boundaries
-            new_value = min(1, max(0, value + step_direction))
-        else:
-            # No mutation, the value remains the same
-            new_value = value
-    else:
-        # The value is at the boundary of the grid, it can only move in one direction
-        if value == 0 and np.random.random() < mu / 2:
-            new_value = value + step_size
-        elif value == 1 and np.random.random() < mu / 2:
-            new_value = value - step_size
-        else:
-            # The value remains the same
-            new_value = value
+    # Création d'un tenseur pour les nouvelles valeurs
+    new_value = value.clone()
+
+    # Masques pour les différentes conditions
+    mask_mid = (value > 0) & (value < 1)  # Valeurs strictement entre 0 et 1
+    mask_zero = (value == 0)              # Valeurs égales à 0
+    mask_one = (value == 1)               # Valeurs égales à 1
+
+    # Génération de nombres aléatoires pour la décision de mutation
+    rand_uniform = torch.rand_like(value)
+
+    # Mutation pour les valeurs entre 0 et 1
+    mutate_mask_mid = (rand_uniform < mu) & mask_mid
+
+    # Décider la direction du pas (-step_size ou +step_size)
+    random_directions = torch.randint(0, 2, value.shape, device=value.device)
+    step_direction = step_size * (2.0 * random_directions.float() - 1.0)
+
+    # Appliquer la mutation aux valeurs qui mutent
+    new_value[mutate_mask_mid] = value[mutate_mask_mid] + step_direction[mutate_mask_mid]
+
+    # Mutation pour les valeurs à la frontière (0 ou 1)
+    mutate_mask_zero = (rand_uniform < mu / 2) & mask_zero
+    mutate_mask_one = (rand_uniform < mu / 2) & mask_one
+
+    # Appliquer la mutation pour les valeurs égales à 0
+    new_value[mutate_mask_zero] = value[mutate_mask_zero] + step_size
+
+    # Appliquer la mutation pour les valeurs égales à 1
+    new_value[mutate_mask_one] = value[mutate_mask_one] - step_size
+
+    # S'assurer que les valeurs restent dans [0, 1]
+    new_value = torch.clamp(new_value, 0.0, 1.0)
+
     return new_value
 
-@nb.jit(nopython=True)
-def reproduction_pop(v1,v2,v3, fitnessToT,number_groups, mu, step_size):
+@torch.jit.script
+def return_pop_vector_Ui(
+    value: torch.Tensor,
+    fitness: torch.Tensor
+) -> torch.Tensor:
+    """
+    Return a vector of the population based on the fitness of the group.
+
+    Parameters:
+    value : torch.Tensor
+        Tensor of parameter values.
+    fitness : torch.Tensor
+        Fitness values corresponding to each individual in the group.
+
+    Returns:
+    torch.Tensor
+        A new tensor where each element is selected based on the fitness probabilities.
+    """
+    # Calcul des probabilités de sélection
+    total_group_fitness = fitness.sum()
+    if total_group_fitness == 0.0:
+        # Si le total de fitness est zéro, utiliser des probabilités uniformes
+        prob = torch.ones_like(fitness) / fitness.size(0)
+    else:
+        prob = fitness / total_group_fitness
+
+    # Taille du groupe
+    test_size = value.size(0)
+
+    # Échantillonnage des indices en fonction des probabilités
+    selected_indices = torch.multinomial(prob, test_size, replacement=True)
+
+    # Sélection des valeurs correspondantes
+    test = value[selected_indices]
+
+    return test
+
+@torch.jit.script
+def reproduction_one_group(
+    v1: torch.Tensor,
+    v2: torch.Tensor,
+    v3: torch.Tensor,
+    fitnessToT: torch.Tensor,
+    mu: float,
+    step_size: float
+) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    """
+    Reproduction of one group of the population.
+
+    Parameters:
+    v1 : torch.Tensor
+        First vector of parameter.
+    v2 : torch.Tensor
+        Second vector of parameter.
+    v3 : torch.Tensor
+        Third vector of parameter.
+    fitnessToT : torch.Tensor
+        Total fitness.
+    mu : float
+        Mutation probability.
+    step_size : float
+        Step size of the mutation.
+
+    Returns:
+    Tuple[torch.Tensor, torch.Tensor, torch.Tensor]
+        Updated vectors v1, v2, v3.
+    """
+    # Sélection des individus en fonction du fitness
+    v1 = return_pop_vector_Ui(v1, fitnessToT)
+    v2 = return_pop_vector_Ui(v2, fitnessToT)
+    v3 = return_pop_vector_Ui(v3, fitnessToT)
+
+    # Application de la mutation en utilisant la fonction 'mutate' vectorisée
+    v1 = mutate(v1, mu, step_size)
+    v2 = mutate(v2, mu, step_size)
+    v3 = mutate(v3, mu, step_size)
+
+    return v1, v2, v3
+
+@torch.jit.script
+def custom_random_choice(prob: torch.Tensor) -> int:
+    """
+    Custom random choice function that selects an index based on the given probabilities.
+
+    Parameters:
+    prob : Probability tensor (torch.Tensor)
+
+    Returns:
+    index : Selected index (int)
+    """
+    rand = torch.rand(1).item()
+    cum_prob = torch.cumsum(prob, dim=0)
+    for i in range(cum_prob.size(0)):
+        if rand < cum_prob[i].item():
+            return i
+    return prob.size(0) - 1
+
+
+
+
+@torch.jit.script
+def costum_shuffle_pop(
+    x_i: torch.Tensor,
+    a_i: torch.Tensor,
+    d_i: torch.Tensor,
+    fitness: torch.Tensor
+) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    """
+    Shuffle the population based on the fitness of the group.
+
+    Parameters:
+    x_i : torch.Tensor
+        First move.
+    a_i : torch.Tensor
+        Left intercept.
+    d_i : torch.Tensor
+        Right intercept.
+    fitness : torch.Tensor
+        Fitness values.
+
+    Returns:
+    Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]
+        Shuffled tensors x_i, a_i, d_i, fitness.
+    """
+    indices = torch.randperm(x_i.size(0))
+    x_i = x_i[indices]
+    a_i = a_i[indices]
+    d_i = d_i[indices]
+    fitness = fitness[indices]
+
+    return x_i, a_i, d_i, fitness
+
+
+@torch.jit.script
+def reproduction_pop(
+    v1: torch.Tensor,
+    v2: torch.Tensor,
+    v3: torch.Tensor,
+    fitnessToT: torch.Tensor,
+    number_groups: int,
+    mu: float,
+    step_size: float
+) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     """
     Takes three vectors and reproduces them based on the fitness of the group
 
     Parameters:
-    v1 : first vector of parameter
-    v2 : second vector of parameter
-    v3 : third vector of parameter
-    fitnessToT : total fitness
-    number_groups : number of groups
-    mu : mutation probability
-    step_size : step size of the mutation
+    v1 : first vector of parameter (torch.Tensor)
+    v2 : second vector of parameter (torch.Tensor)
+    v3 : third vector of parameter (torch.Tensor)
+    fitnessToT : total fitness (torch.Tensor)
+    number_groups : number of groups (int)
+    mu : mutation probability (float)
+    step_size : step size of the mutation (float)
     """
     for j in range(number_groups):
-        v1[j,:], v2[j,:], v3[j,:] = reproduction_one_group(v1[j,:], v2[j,:], v3[j,:], fitnessToT[j,:], mu, step_size)
+        v1_group, v2_group, v3_group = reproduction_one_group(
+            v1[j, :],
+            v2[j, :],
+            v3[j, :],
+            fitnessToT[j, :],
+            mu,
+            step_size
+        )
+        v1[j, :] = v1_group
+        v2[j, :] = v2_group
+        v3[j, :] = v3_group
     return v1, v2, v3
 
 
-@nb.jit(nopython=True)
-def reproduction_one_group(v1,v2,v3, fitnessToT, mu, step_size):
-    """
-    Reproduction of one group of the population
-
-    Parameters:
-    v1 : first vector of parameter
-    v2 : second vector of parameter
-    v3 : third vector of parameter
-    fitnessToT : total fitness
-    mu : mutation probability
-    step_size : step size of the mutation
-    """
-    #for x_i
-    v1 = return_pop_vector_Ui(v1, fitnessToT)
-    #for d_i
-    v2 = return_pop_vector_Ui(v2, fitnessToT)
-    #for a_i
-    v3 = return_pop_vector_Ui(v3, fitnessToT)
-    for i in range(v1.shape[0]):
-        v1[i] = mutate(v1[i], mu, step_size)
-        v2[i] = mutate(v2[i], mu, step_size)
-        v3[i] = mutate(v3[i], mu, step_size)
-    return v1, v2, v3
 
 
-@nb.jit(nopython=True)
-def custom_random_choice(prob):
-    """
-    Custom random choice function that selects an index based on the given probabilities.
-    Args:
-        prob:
-    """
-    # Generate a random number
-    rand = np.random.random()
-    cum_prob = np.cumsum(prob)
-    # Find the index where the cumulative sum exceeds the random number
-    for i in range(len(cum_prob)):
-        if rand < cum_prob[i]:
-            return i
-    return len(prob) - 1
 
-@nb.jit(nopython=True)
-def return_pop_vector_Ui(value,fitness):
-    """
-    Return a vector of the population based on the fitness of the group
-    Args:
-        value
-        fitness
-    """
-    total_group_fitness = np.sum(fitness)
-    prob = fitness / total_group_fitness
-    test_size = value.shape[0]
-    test = np.empty(test_size, dtype=np.float64)
-    for i in range(test_size):
-        test[i] = value[custom_random_choice(prob)]
 
-    return test
 
-@nb.jit(nopython=True)
-def costum_shuffle_pop(x_i,a_i,d_i,fitness):
-    """
-    Shuffle the population based on the fitness of the group and numba compatility
-    Args:
-        x_i: first move
-        a_i: left intercept
-        d_i: right intercept
-        fitness
-    Returns:
-
-    """
-    indices = np.arange(x_i.shape[0])
-    np.random.shuffle(indices)
-    x_i = x_i[indices]
-    d_i = d_i[indices]
-    a_i = a_i[indices]
-    fitness = fitness[indices]
-
-    return x_i, a_i, d_i, fitness
 
 
 
@@ -428,6 +666,7 @@ def main_loop_iterated(x_i, d_i, a_i, fitnessIN, fitnessOUT, fitnessToT,store_in
 
 
     for i in range(0, period, 1):
+
         # store the data
         frame_a, frame_x, frame_d, frame_fitnessToT,frame_surplus = store_data(x_i, d_i, a_i, fitnessToT,surplus, frame_a, frame_x, frame_d, \
                    frame_fitnessToT, frame_surplus,i)
@@ -441,7 +680,8 @@ def main_loop_iterated(x_i, d_i, a_i, fitnessIN, fitnessOUT, fitnessToT,store_in
         x_i, d_i, a_i, store_interaction, fitnessIN,surplus = IN_social_dilemma(x_i, d_i, a_i, store_interaction, fitnessIN, number_groups, group_size,\
                                                                     num_interactions, transfert_multiplier,surplus)
 
-        fitnessToT = fitnessToT_calculation(fitnessIN, fitnessOUT, fitnessToT, number_groups, group_size, truc, num_interactions)
+        fitnessToT = fitnessToT_calculation(fitnessIN, fitnessOUT, fitnessToT, truc, num_interactions)
+
 
         #Migration (Decoupled)
         if not coupled:
@@ -451,6 +691,7 @@ def main_loop_iterated(x_i, d_i, a_i, fitnessIN, fitnessOUT, fitnessToT,store_in
         x_i, d_i, a_i = reproduction_pop(x_i, d_i, a_i, fitnessToT,number_groups, mu, step_size)
 
         tracking[0] = i/period
+
 
     return frame_a, frame_x, frame_d
 
@@ -509,4 +750,31 @@ def launch_sim_iterated(group_size, number_groups, num_interactions, period, mu,
     np.save(os.path.join(dir_path, 'frame_d.npy'), frame_d_store)
     np.save(os.path.join(dir_path, 'frame_surplus.npy'), frame_surplus_store)
 
+group_size = 24
+number_groups = 40
+num_interactions = 100
+period = 1000
+mu = 0.02
+step_size = 0.025
+coupled = True
+to_migrate = 8
+transfert_multiplier = 2
+truc = 0.5
+to_average = 1
+tracking = np.zeros(2)
+x_i_value = 1
+choice = 0
 
+#timing the simulation
+import time
+start = time.time()
+x_i, d_i, a_i, store_interaction, fitnessIN, fitnessOUT, fitnessToT,surplus \
+            = create_initial_pop(group_size, number_groups, num_interactions, transfert_multiplier, x_i_value, choice)
+frame_a, frame_x, frame_d, frame_fitnessToT,frame_surplus, index = create_frames(period,group_size,number_groups)
+
+frame_a, frame_x, frame_d = main_loop_iterated(x_i, d_i, a_i, fitnessIN, fitnessOUT, fitnessToT,store_interaction, surplus,\
+                       frame_a, frame_x, frame_d,frame_fitnessToT,frame_surplus,\
+                        group_size, number_groups, num_interactions, period,mu, step_size,coupled, to_migrate, transfert_multiplier, truc, tracking)
+
+end = time.time()
+print("Time taken: ", end - start)
