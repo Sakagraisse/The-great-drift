@@ -509,4 +509,32 @@ def launch_sim_iterated(group_size, number_groups, num_interactions, period, mu,
     np.save(os.path.join(dir_path, 'frame_d.npy'), frame_d_store)
     np.save(os.path.join(dir_path, 'frame_surplus.npy'), frame_surplus_store)
 
+group_size = 24
+number_groups = 40
+num_interactions = 100
+period = 1000
+mu = 0.02
+step_size = 0.025
+coupled = True
+to_migrate = 8
+transfert_multiplier = 2
+truc = 0.5
+to_average = 1
+tracking = np.zeros(2)
+x_i_value = 1
+choice = 0
+
+#timing the simulation
+import time
+start = time.time()
+x_i, d_i, a_i, store_interaction, fitnessIN, fitnessOUT, fitnessToT,surplus \
+            = create_initial_pop(group_size, number_groups, num_interactions, transfert_multiplier, x_i_value, choice)
+frame_a, frame_x, frame_d, frame_fitnessToT,frame_surplus, index = create_frames(period,group_size,number_groups)
+
+frame_a, frame_x, frame_d = main_loop_iterated(x_i, d_i, a_i, fitnessIN, fitnessOUT, fitnessToT,store_interaction, surplus,\
+                       frame_a, frame_x, frame_d,frame_fitnessToT,frame_surplus,\
+                        group_size, number_groups, num_interactions, period,mu, step_size,coupled, to_migrate, transfert_multiplier, truc, tracking)
+
+end = time.time()
+print("Time taken: ", end - start)
 
