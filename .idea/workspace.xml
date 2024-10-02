@@ -4,15 +4,24 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6f86a6ce-61b7-4aab-bf8c-41de79360c54" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/The-great-drift.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/The-great-drift.iml" afterDir="false" />
+    <list default="true" id="6f86a6ce-61b7-4aab-bf8c-41de79360c54" name="Changes" comment="test speed">
+      <change afterPath="$PROJECT_DIR$/estimation.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/simulation pytorch.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Simulation_Func.py" beforeDir="false" afterPath="$PROJECT_DIR$/Simulation_Func.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
@@ -21,6 +30,9 @@
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GithubDefaultAccount">
+    <option name="defaultAccountId" value="ea18f298-2eab-45ba-a15e-77c39da200eb" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 6
@@ -34,6 +46,9 @@
   &quot;keyToString&quot;: {
     &quot;Python.GUI.executor&quot;: &quot;Run&quot;,
     &quot;Python.Simulation_Func.executor&quot;: &quot;Run&quot;,
+    &quot;Python.estimation.executor&quot;: &quot;Run&quot;,
+    &quot;Python.simulation pytorch.executor&quot;: &quot;Run&quot;,
+    &quot;Python.test.executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;git-widget-placeholder&quot;: &quot;test-torch&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
@@ -65,14 +80,22 @@
       <workItem from="1727772885378" duration="1242000" />
       <workItem from="1727781397355" duration="2960000" />
       <workItem from="1727785524658" duration="4815000" />
+      <workItem from="1727852217790" duration="267000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="test speed" />
+    <option name="LAST_COMMIT_MESSAGE" value="test speed" />
+  </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/The_great_drift$GUI.coverage" NAME="GUI Coverage Results" MODIFIED="1727785694777" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/The_great_drift$Simulation_Func.coverage" NAME="Simulation_Func Coverage Results" MODIFIED="1727790291352" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/The_great_drift$estimation.coverage" NAME="estimation Coverage Results" MODIFIED="1727792999557" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/The_great_drift$Simulation_Func.coverage" NAME="Simulation_Func Coverage Results" MODIFIED="1727793937346" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/The_great_drift$test.coverage" NAME="test Coverage Results" MODIFIED="1727792801115" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/The_great_drift$simulation_pytorch.coverage" NAME="simulation pytorch Coverage Results" MODIFIED="1727794066326" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

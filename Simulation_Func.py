@@ -46,7 +46,7 @@ def create_frames(period, group_size, number_groups):
     return frame_a, frame_x, frame_d,frame_fitnessToT, frame_surplus,index
 
 
-#@nb.jit(nopython=True)
+
 def create_initial_pop(group_size, number_groups, num_interactions,transfert_multiplier,x_i_value,choice,device = 'cpu'):
     """
     This function creates the initial population of players for a simulation.
@@ -658,8 +658,7 @@ def reproduction_pop(
 
 
 
-
-
+@torch.jit.script
 def main_loop_iterated(x_i, d_i, a_i, fitnessIN, fitnessOUT, fitnessToT,store_interaction, surplus,\
                        frame_a, frame_x, frame_d,frame_fitnessToT,frame_surplus,\
                         group_size, number_groups, num_interactions, period,mu, step_size,coupled, to_migrate, transfert_multiplier, truc, tracking):
@@ -668,8 +667,8 @@ def main_loop_iterated(x_i, d_i, a_i, fitnessIN, fitnessOUT, fitnessToT,store_in
     for i in range(0, period, 1):
 
         # store the data
-        frame_a, frame_x, frame_d, frame_fitnessToT,frame_surplus = store_data(x_i, d_i, a_i, fitnessToT,surplus, frame_a, frame_x, frame_d, \
-                   frame_fitnessToT, frame_surplus,i)
+        # frame_a, frame_x, frame_d, frame_fitnessToT,frame_surplus = store_data(x_i, d_i, a_i, fitnessToT,surplus, frame_a, frame_x, frame_d, \
+        # frame_fitnessToT, frame_surplus,i)
 
         #Migration(Coupled)
         if coupled:
