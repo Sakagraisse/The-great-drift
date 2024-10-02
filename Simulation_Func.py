@@ -101,7 +101,7 @@ def create_storage(period, group_size, number_groups):
 
 
 @torch.jit.script
-def store_data_torch(x_i, d_i, a_i, fitnessToT, surplus, fitnessOUT, store_interaction,
+def store_data_torch(x_i, d_i, a_i, fitnessToT, surplus):
     """
     Store the data in flattened tensors.
 
@@ -694,7 +694,7 @@ def loop_iterated(group_size, number_groups, num_interactions, period,mu, step_s
                     to_average,tracking, x_i_value, choice):
 
     for i in range(1, (to_average + 1), 1):
-        frame_a, frame_x, frame_d, frame_fitnessToT,frame_surplus, index = create_frames(period,group_size,number_groups)
+        #frame_a, frame_x, frame_d, frame_fitnessToT,frame_surplus, index = create_frames(period,group_size,number_groups)
 
         x_i, d_i, a_i, store_interaction, fitnessIN, fitnessOUT, fitnessToT,surplus \
             = create_initial_pop(group_size, number_groups, num_interactions, transfert_multiplier, x_i_value, choice)
@@ -764,11 +764,11 @@ import time
 start = time.time()
 x_i, d_i, a_i, store_interaction, fitnessIN, fitnessOUT, fitnessToT,surplus \
             = create_initial_pop(group_size, number_groups, num_interactions, transfert_multiplier, x_i_value, choice)
-frame_a, frame_x, frame_d, frame_fitnessToT,frame_surplus, index = create_frames(period,group_size,number_groups)
+#frame_a, frame_x, frame_d, frame_fitnessToT,frame_surplus, index = create_frames(period,group_size,number_groups)
 
-frame_a, frame_x, frame_d = main_loop_iterated(x_i, d_i, a_i, fitnessIN, fitnessOUT, fitnessToT,store_interaction, surplus,\
-                       frame_a, frame_x, frame_d,frame_fitnessToT,frame_surplus,\
-                        group_size, number_groups, num_interactions, period,mu, step_size,coupled, to_migrate, transfert_multiplier, truc, tracking)
+#frame_a, frame_x, frame_d = main_loop_iterated(x_i, d_i, a_i, fitnessIN, fitnessOUT, fitnessToT,store_interaction, surplus,\
+                       #frame_a, frame_x, frame_d,frame_fitnessToT,frame_surplus,\
+                        #group_size, number_groups, num_interactions, period,mu, step_size,coupled, to_migrate, transfert_multiplier, truc, tracking)
 
 end = time.time()
 print("Time taken: ", end - start)
