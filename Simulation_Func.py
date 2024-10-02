@@ -24,29 +24,10 @@ def activate_torch_mps():
 
 
 
-def create_frames(period, group_size, number_groups):
-    """
-        This function creates the arrays to store the result of the simulation.
-
-        Parameters:
-        period (int): The number of periods in the simulation.
-        group_size (int): The size of each group in the population.
-        number_groups (int): The total number of groups in the population.
-        """
-    # Initialize the frames
-    frame_a = np.zeros((period, (group_size * number_groups)))
-    frame_x = np.zeros((period, (group_size * number_groups)))
-    frame_d = np.zeros((period, (group_size * number_groups)))
-    frame_surplus = np.zeros((period, (group_size * number_groups)))
-    frame_fitnessToT = np.zeros((period, (group_size * number_groups)))
-
-    # Initialize the index to store the data
-    index = np.round(np.linspace(0, frame_x.shape[0]-1, 76)).astype(np.int64)
-
-    return frame_a, frame_x, frame_d,frame_fitnessToT, frame_surplus,index
 
 
-#@nb.jit(nopython=True)
+
+
 def create_initial_pop(group_size, number_groups, num_interactions,transfert_multiplier,x_i_value,choice,device = 'cpu'):
     """
     This function creates the initial population of players for a simulation.
@@ -92,21 +73,35 @@ def create_initial_pop(group_size, number_groups, num_interactions,transfert_mul
 
     # Initialize the store_interaction, fitnessIN, fitnessOUT, fitnessToT, and surplus arrays
     store_interaction = torch.zeros((number_groups, group_size, num_interactions), dtype=torch.float32, device=device)
-    surplus = torch.zeros((number_groups, group_size), dtype=torch.float32, device=device)
     fitnessIN = torch.zeros((number_groups, group_size), dtype=torch.float32, device=device)
     fitnessOUT = torch.zeros((number_groups, group_size), dtype=torch.float32, device=device)
     fitnessToT = torch.zeros((number_groups, group_size), dtype=torch.float32, device=device)
-    return x_i, d_i, a_i, store_interaction, fitnessIN, fitnessOUT, fitnessToT,surplus
+    return x_i, d_i, a_i, store_interaction, fitnessIN, fitnessOUT, fitnessToT
+
+def create_storage(period, group_size, number_groups):
+    """
+        This function creates the arrays to store the result of the simulation.
+
+        Parameters:
+        period (int): The number of periods in the simulation.
+        group_size (int): The size of each group in the population.
+        number_groups (int): The total number of groups in the population.
+        """
+    # Initialize the frames
+    storage_x = np.zeros((period, (group_size * number_groups)))
+    storage_d = np.zeros((period, (group_size * number_groups)))
+    storage_a = np.zeros((period, (group_size * number_groups)))
+    storage_store_interaction = np.zeros((period, (group_size * number_groups)))
+    storage_fitnessIN = np.zeros((period, (group_size * number_groups)))
+    storage_fitnessOUT = np.zeros((period, (group_size * number_groups)))
+    storage_fitnessToT = np.zeros((period, (group_size * number_groups)))
+
+    return storage_x, storage_d, storage_a, storage_store_interaction, storage_fitnessIN, storage_fitnessOUT, storage_fitnessToT
+
 
 
 @torch.jit.script
-def store_data_torch(
-    x_i: torch.Tensor,
-    d_i: torch.Tensor,
-    a_i: torch.Tensor,
-    fitnessToT: torch.Tensor,
-    surplus: torch.Tensor
-):
+def store_data_torch(x_i, d_i, a_i, fitnessToT, surplus, fitnessOUT, store_interaction,
     """
     Store the data in flattened tensors.
 
@@ -192,7 +187,6 @@ def migration(
     fitnessToT: torch.Tensor,
     fitnessOUT: torch.Tensor,
     fitnessIN: torch.Tensor,
-    surplus: torch.Tensor,
     number_groups: int,
     group_size: int,
     to_migrate: int
@@ -216,7 +210,7 @@ def migration(
         raise ValueError("The number of migrants is greater than the group size")
 
     if to_migrate == 0:
-        return x_i, d_i, a_i, fitnessToT, fitnessOUT, fitnessIN, surplus
+        return x_i, d_i, a_i, fitnessToT, fitnessOUT, fitnessIN
 
     device = x_i.device
 
@@ -231,7 +225,7 @@ def migration(
     fitnessToT = fitnessToT.gather(1, indices)
     fitnessOUT = fitnessOUT.gather(1, indices)
     fitnessIN = fitnessIN.gather(1, indices)
-    surplus = surplus.gather(1, indices)
+
 
     # Extraire les migrants
     temp_x_i = x_i[:, :to_migrate].clone()
@@ -290,7 +284,7 @@ def migration(
     fitnessIN[:, :to_migrate] = temp_fitnessIN
     surplus[:, :to_migrate] = temp_surplus
 
-    return x_i, d_i, a_i, fitnessToT, fitnessOUT, fitnessIN, surplus
+    return x_i, d_i, a_i, fitnessToT, fitnessOUT, fitnessIN
 
 
 
@@ -764,7 +758,7 @@ to_average = 1
 tracking = np.zeros(2)
 x_i_value = 1
 choice = 0
-
+activate_torch_mps()
 #timing the simulation
 import time
 start = time.time()
